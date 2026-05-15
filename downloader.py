@@ -109,6 +109,7 @@ async def validate_and_download(
         check_disk_space(live_manager, custom_path=args.custom_path)
 
     validated_url = add_https_prefix(url)
+    print(f"[URL] {validated_url}")
     soup = await fetch_page(validated_url)
 
     if soup is None:

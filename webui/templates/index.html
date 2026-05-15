@@ -169,10 +169,12 @@ header h1 span.dot.running{background:var(--green);box-shadow:0 0 8px var(--gree
       </div>
     </div>
 
-    <!-- Tabs for right panel content -->
+    <!-- History (sidebar bottom) -->
     <div class="card hidden" id="dlCard">
-      <div class="card-header"><h2>📁 已下载</h2></div>
-      <div class="card-body" id="dlContent"><div class="empty">加载中…</div></div>
+      <div class="card-header"><h2>📋 下载记录</h2></div>
+      <div class="card-body" id="dlContent" style="font-size:12px;padding:0">
+        <div class="empty">加载中…</div>
+      </div>
     </div>
     <div class="card hidden" id="logCard">
       <div class="card-header"><h2>📄 Session Log</h2></div>
@@ -242,7 +244,7 @@ async function tick() {
   // periodically refresh downloads & session log
   if (tick.count==null) tick.count=0;
   tick.count++;
-  if (tick.count%15===0) { refreshDownloads(); refreshSessionLog(); }
+  if (tick.count%15===0) { refreshHistory(); refreshSessionLog(); }
 }
 setInterval(tick, 1500);
 
@@ -388,14 +390,23 @@ async function stopDownload() {
   await fetch('/api/stop',{method:'POST'});
 }
 
-async function refreshDownloads() {
-  const r=await fetch('/api/downloads');const items=await r.json();
-  if(!items.length){E.dlContent.innerHTML='<div class="empty">暂无下载文件</div>';return}
-  let h='<table class="dl-table"><thead><tr><th>名称</th><th>大小</th><th>时间</th></tr></thead><tbody>';
+async function refreshHistory() {
+  const r=await fetch('/api/history');const items=await r.json();
+  if(!items.length){E.dlContent.innerHTML='<div class="empty">暂无下载记录</div>';E.dlCard.classList.remove('hidden');return}
+  let h=`<table class="dl-table"><thead><tr>
+    <th>#</th><th>时间</th><th>文件名</th><th>大小</th><th>状态</th>
+  </tr></thead><tbody>`;
   items.forEach(i=>{
-    const badge=i.type==='album'?'<span class="badge badge-album">专辑</span>':'<span class="badge badge-file">文件</span>';
-    const sz=i.type==='album'?(i.totalSize>1e9?(i.totalSize/1e9).toFixed(2)+' GB':(i.totalSize/1e6).toFixed(1)+' MB'):(i.size>1e6?(i.size/1e6).toFixed(1)+' MB':(i.size/1e3).toFixed(1)+' KB');
-    h+=`<tr><td>${badge} ${i.name}</td><td style="color:var(--dim)">${sz}</td><td style="color:var(--dim);font-size:11px">${i.mtime?i.mtime.substring(0,16):''}</td></tr>`;
+    const s=i.status==='完成'?'ok':i.status==='失败'?'fail':'skip';
+    const sz=i.size?((i.size>1e6?(i.size/1e6).toFixed(1)+' MB':(i.size>1e3?(i.size/1e3).toFixed(1)+' KB':i.size+' B'))):'—';
+    const urlShort=i.url?i.url.replace(/^https?:\/\//,'').substring(0,50):'';
+    h+=`<tr title="${i.url||''}">
+      <td style="color:var(--dim);font-size:11px">${i.id}</td>
+      <td style="font-size:11px;white-space:nowrap">${i.time||''}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.filename||''}\n${i.url||''}\n${i.path||''}">${i.filename||''}</td>
+      <td style="color:var(--dim);font-size:11px;white-space:nowrap">${sz}</td>
+      <td><span class="badge badge-${s==='ok'?'file':s==='fail'?'fail':'album'}" style="background:${s==='ok'?'#064e3b':s==='fail'?'#3b0a0a':'#1a3a5c'};color:${s==='ok'?'var(--green)':s==='fail'?'var(--red)':'var(--dim)'}">${i.status}</span></td>
+    </tr>`;
   });
   h+='</tbody></table>';E.dlContent.innerHTML=h;
   E.dlCard.classList.remove('hidden');

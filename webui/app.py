@@ -5,7 +5,6 @@ import re
 import subprocess
 import sys
 import threading
-import time
 from datetime import datetime
 from pathlib import Path
 
@@ -21,8 +20,9 @@ LOGS_DIR = DATA_DIR / "logs"
 SETTINGS_FILE = CONFIG_DIR / "settings.json"
 URLS_FILE = CONFIG_DIR / "URLs.txt"
 LOG_FILE = LOGS_DIR / "session.log"
+HISTORY_FILE = CONFIG_DIR / "download_history.json"
+MAX_HISTORY = 500
 
-# ── defaults ──
 DEFAULT_SETTINGS = {
     "concurrency": 3,
     "maxRetries": 5,
@@ -34,18 +34,16 @@ DEFAULT_SETTINGS = {
     "httpsProxy": "",
 }
 
-# ── runtime / download job state ──
+# ── runtime state ──
 download_process = None
 download_lock = threading.Lock()
 download_running = False
-MAX_OUTPUT_LINES = 300
 
-# Parsed job state
 job_state = {
-    "phase": "idle",       # idle | starting | running | stopping
+    "phase": "idle",
     "urlCount": 0,
-    "urlIndex": 0,
     "urlLabel": "",
+    "downloadPath": "",
     "files": [],
     "logs": [],
     "summary": None,
@@ -59,8 +57,8 @@ def reset_job():
     job_state = {
         "phase": "idle",
         "urlCount": 0,
-        "urlIndex": 0,
         "urlLabel": "",
+        "downloadPath": "",
         "files": [],
         "logs": [],
         "summary": None,
@@ -69,6 +67,7 @@ def reset_job():
     }
 
 
+# ── settings ──
 def load_settings():
     try:
         if SETTINGS_FILE.exists():
@@ -83,107 +82,124 @@ def save_settings(s):
     SETTINGS_FILE.write_text(json.dumps(s, indent=2))
 
 
+# ── history ──
+def load_history():
+    try:
+        if HISTORY_FILE.exists():
+            return json.loads(HISTORY_FILE.read_text())
+    except (json.JSONDecodeError, IOError):
+        pass
+    return []
+
+
+def save_history(entries):
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    HISTORY_FILE.write_text(json.dumps(entries, ensure_ascii=False, indent=2))
+
+
+def record_history(filename, url, status, size_bytes, dl_path):
+    entries = load_history()
+    entry = {
+        "id": len(entries) + 1,
+        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "filename": filename,
+        "url": url,
+        "status": status,
+        "size": size_bytes,
+        "path": dl_path,
+    }
+    entries.insert(0, entry)
+    if len(entries) > MAX_HISTORY:
+        entries = entries[:MAX_HISTORY]
+    for i, e in enumerate(entries):
+        e["id"] = i + 1
+    save_history(entries)
+
+
+# ── logs ──
 def read_logs(tail=200):
     if not LOG_FILE.exists():
         return ""
-    lines = LOG_FILE.read_text(errors="replace").splitlines()
-    return "\n".join(lines[-tail:])
+    return "\n".join(LOG_FILE.read_text(errors="replace").splitlines()[-tail:])
 
 
-def list_downloads():
-    """List items downloaded by BunkrDownloader.
-    BunkrDownloader places files inside <custom_path>/Downloads/<AlbumName>/."""
-    settings = load_settings()
-    base = Path(settings.get("downloadPath", "/data/downloads"))
-    subdir = settings.get("downloadSubdir", "").strip().strip("/")
-    dl_root = base / subdir / "Downloads" if subdir else base / "Downloads"
-    if not dl_root.exists():
-        return []
-    result = []
-    for item in sorted(dl_root.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True):
-        if item.is_dir():
-            files = []
-            total_size = 0
-            for f in item.rglob("*"):
-                if f.is_file():
-                    sz = f.stat().st_size
-                    files.append({"name": str(f.relative_to(item)), "size": sz})
-                    total_size += sz
-            result.append({
-                "name": item.name,
-                "type": "album",
-                "files": sorted(files, key=lambda x: x["name"])[:50],
-                "fileCount": len(files),
-                "totalSize": total_size,
-                "mtime": datetime.fromtimestamp(item.stat().st_mtime).isoformat(),
-            })
-        elif item.is_file():
-            result.append({
-                "name": item.name,
-                "type": "file",
-                "size": item.stat().st_size,
-                "mtime": datetime.fromtimestamp(item.stat().st_mtime).isoformat(),
-            })
-    return result
+def human_size(n):
+    if n == 0:
+        return "0 B"
+    if n < 1024:
+        return f"{n} B"
+    elif n < 1024 * 1024:
+        return f"{n / 1024:.1f} KB"
+    elif n < 1024 * 1024 * 1024:
+        return f"{n / (1024*1024):.1f} MB"
+    return f"{n / (1024*1024*1024):.2f} GB"
 
 
+# ── subprocess output parser ──
 def parse_output_line(line: str):
-    """Parse a line from subprocess stdout into structured job state updates."""
     global job_state
 
-    # File progress / status
+    # File status: [FIL] START|DONE|FAIL|SKIP <name>
     m = re.match(r'^\[FIL\]\s+(\w+)\s+(.+)$', line)
     if m:
         action, name = m.group(1), m.group(2).strip()
         if action == "START":
-            # create or update file entry
-            entry = None
+            found = False
             for f in job_state["files"]:
                 if f["name"] == name:
-                    entry = f
+                    f["status"] = "downloading"
+                    found = True
                     break
-            if not entry:
-                entry = {"name": name, "status": "downloading", "pct": 0, "size": "?"}
-                job_state["files"].append(entry)
-            else:
-                entry["status"] = "downloading"
+            if not found:
+                job_state["files"].append({"name": name, "status": "downloading", "pct": 0, "size": "?"})
         elif action == "DONE":
+            total_bytes = 0
             for f in job_state["files"]:
                 if f["name"] == name:
                     f["status"] = "done"
+                    total_bytes = f.get("totalBytes", 0)
                     break
+            record_history(name, job_state.get("urlLabel", ""), "完成",
+                           total_bytes, job_state.get("downloadPath", ""))
         elif action == "FAIL":
+            total_bytes = 0
             for f in job_state["files"]:
                 if f["name"] == name:
                     f["status"] = "fail"
+                    total_bytes = f.get("totalBytes", 0)
                     break
+            record_history(name, job_state.get("urlLabel", ""), "失败",
+                           total_bytes, job_state.get("downloadPath", ""))
         elif action == "SKIP":
-            job_state["files"].append({"name": name, "status": "skip", "pct": 0, "size": "?"})
+            reason = name
+            job_state["files"].append({"name": reason, "status": "skip", "pct": 0, "size": "?"})
+            record_history(reason, job_state.get("urlLabel", ""), "跳过", 0,
+                           job_state.get("downloadPath", ""))
         return
 
-    # Download progress
+    # Progress: [DWN] <filename> <pct>% <downloaded>/<total>
     m = re.match(r'^\[DWN\]\s+(.+?)\s+([\d.]+)%\s+(\d+)/(\d+)', line)
     if m:
         name = m.group(1).strip()
         pct = float(m.group(2))
         downloaded = int(m.group(3))
         total = int(m.group(4))
-        size_str = human_size(total)
         for f in job_state["files"]:
             if f["name"] == name:
                 f["pct"] = round(pct, 1)
-                f["size"] = size_str
+                f["size"] = human_size(total)
                 f["downloaded"] = human_size(downloaded)
+                f["totalBytes"] = total
                 break
         return
 
-    # URL / album start
+    # URL context: [URL] <url>
     m = re.match(r'^\[URL\]\s+(.+)$', line)
     if m:
         job_state["urlLabel"] = m.group(1).strip()
         return
 
-    # Summary
+    # Summary: [SUM] completed=N failed=N skipped=N time=...
     m = re.match(r'^\[SUM\]\s+completed=(\d+)\s+failed=(\d+)\s+skipped=(\d+)\s+time=(.+)$', line)
     if m:
         job_state["summary"] = {
@@ -194,7 +210,7 @@ def parse_output_line(line: str):
         }
         return
 
-    # Log line (from logging.info via --disable-ui)
+    # Log: [HH:MM:SS] Event: ... | Details: ...
     m = re.match(r'^\[(\d{2}:\d{2}:\d{2})\]\s+Event:\s+(.+?)\s+\|\s+Details:\s+(.+)$', line)
     if m:
         ts, event, details = m.group(1), m.group(2).strip(), m.group(3).strip()
@@ -203,7 +219,7 @@ def parse_output_line(line: str):
             job_state["logs"] = job_state["logs"][-200:]
         return
 
-    # Fallback: raw line as log
+    # Fallback
     stripped = line.strip()
     if stripped and len(stripped) < 300:
         job_state["logs"].append({"ts": datetime.now().strftime("%H:%M:%S"), "event": "", "details": stripped})
@@ -211,18 +227,9 @@ def parse_output_line(line: str):
             job_state["logs"] = job_state["logs"][-200:]
 
 
-def human_size(n):
-    if n < 1024:
-        return f"{n} B"
-    elif n < 1024 * 1024:
-        return f"{n / 1024:.1f} KB"
-    elif n < 1024 * 1024 * 1024:
-        return f"{n / (1024*1024):.1f} MB"
-    return f"{n / (1024*1024*1024):.2f} GB"
-
-
+# ── download runner ──
 def run_download_thread(urls, settings):
-    global download_process, download_running, job_state
+    global download_process, download_running
 
     with download_lock:
         if download_running:
@@ -241,7 +248,6 @@ def run_download_thread(urls, settings):
         env = os.environ.copy()
         env["PYTHONUNBUFFERED"] = "1"
 
-        # Proxy
         http_proxy = settings.get("httpProxy", "").strip()
         https_proxy = settings.get("httpsProxy", "").strip()
         if http_proxy:
@@ -271,14 +277,12 @@ def run_download_thread(urls, settings):
             cmd += ["--include"] + settings["includeList"].strip().split()
 
         job_state["phase"] = "running"
+        job_state["downloadPath"] = dl_path
 
         with subprocess.Popen(
-            cmd,
-            cwd="/app",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            env=env,
+            cmd, cwd="/app",
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            text=True, env=env,
         ) as proc:
             download_process = proc
             for line in proc.stdout:
@@ -305,10 +309,7 @@ def index():
 
 @app.route("/api/status")
 def api_status():
-    return jsonify({
-        "running": download_running,
-        "job": job_state,
-    })
+    return jsonify({"running": download_running, "job": job_state})
 
 
 @app.route("/api/settings", methods=["GET", "POST"])
@@ -326,9 +327,9 @@ def api_settings():
     return jsonify(load_settings())
 
 
-@app.route("/api/downloads")
-def api_downloads():
-    return jsonify(list_downloads())
+@app.route("/api/history")
+def api_history():
+    return jsonify(load_history())
 
 
 @app.route("/api/logs")
@@ -338,7 +339,6 @@ def api_logs():
 
 @app.route("/api/subdirs", methods=["GET", "POST"])
 def api_subdirs():
-    """List and manage download subdirectories recursively."""
     dl = DOWNLOADS_DIR
     dl.mkdir(parents=True, exist_ok=True)
     if request.method == "POST":
@@ -347,12 +347,10 @@ def api_subdirs():
         if rel and "/" not in rel and ".." not in rel:
             (dl / rel).mkdir(parents=True, exist_ok=True)
         return jsonify({"ok": True})
-    # Recursive listing — keep root first, rest sorted
     dirs = [{"name": "(根目录)", "path": "/data/downloads"}]
     _walk_subdirs(dl, "", dirs)
     if len(dirs) > 1:
-        tail = sorted(dirs[1:], key=lambda d: d["name"])
-        dirs[1:] = tail
+        dirs[1:] = sorted(dirs[1:], key=lambda d: d["name"])
     return jsonify(dirs)
 
 
@@ -373,19 +371,16 @@ def api_start():
     with download_lock:
         if download_running:
             return jsonify({"ok": False, "error": "Download already running"})
-
     data = request.get_json(force=True)
     urls = data.get("urls", [])
     if isinstance(urls, str):
         urls = [urls]
     if not urls:
         return jsonify({"ok": False, "error": "No URLs provided"})
-
     settings = load_settings()
     if "settings" in data:
         for k, v in data["settings"].items():
             settings[k] = v
-
     t = threading.Thread(target=run_download_thread, args=(urls, settings), daemon=True)
     t.start()
     return jsonify({"ok": True, "urlCount": len(urls)})
@@ -413,12 +408,9 @@ def api_urls():
         URLS_FILE.parent.mkdir(parents=True, exist_ok=True)
         URLS_FILE.write_text("\n".join(urls) + "\n")
         return jsonify({"ok": True, "count": len(urls)})
-
     if URLS_FILE.exists():
-        urls = [u.strip() for u in URLS_FILE.read_text().splitlines() if u.strip()]
-    else:
-        urls = []
-    return jsonify({"urls": urls})
+        return jsonify({"urls": [u.strip() for u in URLS_FILE.read_text().splitlines() if u.strip()]})
+    return jsonify({"urls": []})
 
 
 if __name__ == "__main__":

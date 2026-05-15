@@ -1,17 +1,19 @@
 #!/bin/bash
 set -euo pipefail
 
-# Ensure symlinks / config persist across restarts
-mkdir -p /data/downloads /data/logs /data/config
+# Ensure data directories exist (volume mounts may override these)
+for d in /data/downloads /data/logs /data/config; do
+  mkdir -p "$d" 2>/dev/null || true
+done
 
-# Copy default settings if not present
+# Seed default settings only if the file is missing; ignore permission errors
+# (webui/app.py already falls back to DEFAULT_SETTINGS when nothing is readable)
 if [ ! -f /data/config/settings.json ]; then
-    cp /app/config.default.json /data/config/settings.json 2>/dev/null || \
-    echo '{"concurrency":3,"maxRetries":5,"downloadPath":"/data/downloads","ignoreList":"","includeList":""}' > /data/config/settings.json
+  cp /app/config.default.json /data/config/settings.json 2>/dev/null || true
 fi
 
-# Create URLs.txt if not present
-touch /data/config/URLs.txt
+# Seed URLs.txt
+touch /data/config/URLs.txt 2>/dev/null || true
 
 echo "[entry] starting BunkrDownloader WebUI on :8877"
 exec python3 webui/app.py

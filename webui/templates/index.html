@@ -8,7 +8,8 @@
 :root {
   --bg:#060609; --card:#0c0c14; --border:#1a1a2e; --text:#e2e2e8;
   --dim:#6b6b7b; --accent:#7c8cf8; --green:#3ecf8e; --red:#ef6b6b;
-  --yellow:#f0b95e; --radius:12px; --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --yellow:#f0b95e; --radius:12px;
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --mono:'JetBrains Mono','SF Mono','Cascadia Code',monospace;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -17,38 +18,37 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 
 /* header */
-header{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border)}
-header h1{font-size:16px;font-weight:600;display:flex;align-items:center;gap:10px;letter-spacing:-.01em}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border)}
+header h1{font-size:15px;font-weight:600;display:flex;align-items:center;gap:10px;letter-spacing:-.01em}
 header h1 .dot{width:6px;height:6px;border-radius:50%;background:var(--dim);display:inline-block;transition:all .3s}
 header h1 .dot.on{background:var(--green);box-shadow:0 0 10px var(--green)}
 .status-tag{font-size:11px;padding:3px 10px;border-radius:20px;background:var(--border);color:var(--dim);transition:all .3s}
 .status-tag.on{background:#0a2e1f;color:var(--green)}
 
 /* layout */
-.layout{display:grid;grid-template-columns:360px 1fr;gap:18px;padding:20px;max-width:1320px;margin:0 auto;min-height:calc(100vh - 58px);align-items:start}
+.layout{display:grid;grid-template-columns:340px 1fr;gap:18px;padding:18px;max-width:1340px;margin:0 auto;align-items:start}
 
 /* cards */
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .2s}
-.card:hover{border-color:#252540}
-.card-head{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.card-head h2{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--dim)}
-.card-head .meta{font-size:11px;color:var(--dim)}
-.card-body{padding:16px 18px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.card-head{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-head h2{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--dim)}
+.card-head .meta{font-size:10.5px;color:var(--dim)}
+.card-body{padding:18px 20px}
 .card-body.flat{padding:0}
 
 /* sidebar */
-.sidebar{display:flex;flex-direction:column;gap:14px;position:sticky;top:20px}
+.sidebar{display:flex;flex-direction:column;gap:18px;position:sticky;top:18px}
 
 /* form */
-.field{margin-bottom:11px}
-.field label{display:block;font-size:10.5px;color:var(--dim);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
-.field input,.field textarea,.field select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 11px;color:var(--text);font-size:12.5px;font-family:inherit;outline:none;transition:border-color .15s,box-shadow .15s}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:10.5px;color:var(--dim);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.field input,.field textarea,.field select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:7px 11px;color:var(--text);font-size:12.5px;font-family:inherit;outline:none;transition:border-color .15s,box-shadow .15s}
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(124,140,248,.1)}
-.field textarea{min-height:96px;font-family:var(--mono);font-size:11px;line-height:1.6;resize:vertical}
+.field textarea{min-height:90px;font-family:var(--mono);font-size:11px;line-height:1.6;resize:vertical}
 .form-row{display:flex;gap:10px}.form-row>*{flex:1}
 
 /* buttons */
-.btn{padding:8px 20px;border-radius:8px;border:none;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:var(--font)}
+.btn{padding:7px 18px;border-radius:7px;border:none;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:var(--font)}
 .btn:hover{transform:translateY(-1px)}
 .btn:active{transform:translateY(0)}
 .btn-pri{background:var(--accent);color:#fff}
@@ -56,21 +56,22 @@ header h1 .dot.on{background:var(--green);box-shadow:0 0 10px var(--green)}
 .btn-off{background:var(--red);color:#fff}
 .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
 .btn-block{width:100%}
-.btn-sm{padding:5px 12px;font-size:11px;border-radius:6px}
+.btn-sm{padding:5px 10px;font-size:10.5px;border-radius:6px}
 .btn-group{display:flex;gap:8px;margin-top:10px}
 
-/* right panel */
-.main-panel{display:flex;flex-direction:column;gap:14px}
+/* main panel */
+.main-panel{display:flex;flex-direction:column;gap:18px}
 
 /* file list */
-.file-row{display:flex;align-items:center;gap:12px;padding:9px 18px;border-bottom:1px solid rgba(255,255,255,.03);font-size:12.5px;transition:background .15s}
+.file-list{max-height:380px;overflow-y:auto}
+.file-row{display:flex;align-items:center;gap:12px;padding:9px 20px;border-bottom:1px solid rgba(255,255,255,.03);font-size:12.5px;transition:background .15s}
 .file-row:last-child{border-bottom:none}
 .file-row:hover{background:rgba(255,255,255,.015)}
-.file-dot{width:18px;text-align:center;flex-shrink:0;font-size:12px}
+.file-dot{width:16px;text-align:center;flex-shrink:0;font-size:12px}
 .file-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.file-meta{color:var(--dim);font-size:10.5px;flex-shrink:0;width:72px;text-align:right}
+.file-meta{color:var(--dim);font-size:10.5px;flex-shrink:0;width:80px;text-align:right}
 .file-pct{color:var(--dim);font-size:10.5px;flex-shrink:0;width:42px;text-align:right}
-.file-bar{flex-shrink:0;width:72px;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.file-bar{flex-shrink:0;width:64px;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
 .file-bar-inner{height:100%;border-radius:2px;transition:width .4s,background .4s}
 .file-bar-inner.dl{background:var(--accent)}
 .file-bar-inner.ok{background:var(--green)}
@@ -80,27 +81,27 @@ header h1 .dot.on{background:var(--green);box-shadow:0 0 10px var(--green)}
 .file-row.skip .file-name{color:var(--dim);text-decoration:line-through}
 
 /* summary */
-.summary{display:flex;gap:20px;padding:10px 18px;border-top:1px solid var(--border);font-size:12px}
-.summary .stat{display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+.summary{display:flex;gap:20px;padding:8px 20px;border-top:1px solid var(--border);font-size:12px}
+.summary .stat{display:flex;align-items:center;gap:5px;font-variant-numeric:tabular-nums}
 .summary .n{font-weight:700}
 .summary .n.g{color:var(--green)}.summary .n.r{color:var(--red)}.summary .n.s{color:var(--dim)}
 
 /* log */
-.log-scroll{max-height:260px;overflow-y:auto;font-family:var(--mono);font-size:11px;line-height:1.6}
-.log-row{display:flex;gap:8px;padding:4px 18px;border-bottom:1px solid rgba(255,255,255,.02)}
+.log-scroll{max-height:240px;overflow-y:auto;font-family:var(--mono);font-size:11px;line-height:1.6}
+.log-row{display:flex;gap:8px;padding:4px 20px;border-bottom:1px solid rgba(255,255,255,.02)}
 .log-row:hover{background:rgba(255,255,255,.01)}
-.log-ts{color:var(--dim);flex-shrink:0;width:48px;font-size:10.5px}
-.log-ev{flex-shrink:0;font-weight:600;min-width:64px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10.5px}
+.log-ts{color:var(--dim);flex-shrink:0;width:52px;font-size:10.5px}
+.log-ev{flex-shrink:0;font-weight:600;min-width:70px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10.5px}
 .log-detail{flex:1;color:var(--dim);min-width:0;word-break:break-all}
 .log-ev.g{color:var(--green)}.log-ev.r{color:var(--red)}.log-ev.y{color:var(--yellow)}
 
 /* history table */
 .hist-table{width:100%;border-collapse:collapse;font-size:12px}
-.hist-table th{text-align:left;padding:7px 12px;font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--card)}
-.hist-table td{padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.03);font-variant-numeric:tabular-nums}
+.hist-table th{text-align:left;padding:8px 12px;font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--card);z-index:1}
+.hist-table td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.03);font-variant-numeric:tabular-nums}
 .hist-table tr:hover td{background:rgba(255,255,255,.015)}
-.hist-table .fn{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hist-body{max-height:340px;overflow-y:auto}
+.hist-table .fn{max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-body{max-height:300px;overflow-y:auto}
 
 /* empty */
 .empty{text-align:center;color:var(--dim);padding:48px 0;font-size:13px}
@@ -119,7 +120,7 @@ header h1 .dot.on{background:var(--green);box-shadow:0 0 10px var(--green)}
 </header>
 
 <div class="layout">
-  <!-- SIDEBAR -->
+  <!-- SIDEBAR: controls only -->
   <div class="sidebar">
     <div class="card">
       <div class="card-head"><h2>URL 列表</h2><span class="meta" id="urlCnt"></span></div>
@@ -128,8 +129,8 @@ header h1 .dot.on{background:var(--green);box-shadow:0 0 10px var(--green)}
           <textarea id="urlsInput" placeholder="https://bunkr.si/a/...&#10;https://bunkr.fi/f/...&#10;每行一个 URL"></textarea>
         </div>
         <div class="btn-group">
-          <button class="btn btn-on btn-block" id="btnStart">▶ 开始下载</button>
-          <button class="btn btn-off btn-block hidden" id="btnStop">⏹ 停止</button>
+          <button class="btn btn-on btn-block" id="btnStart">开始下载</button>
+          <button class="btn btn-off btn-block hidden" id="btnStop">停止</button>
         </div>
       </div>
     </div>
@@ -154,7 +155,7 @@ header h1 .dot.on{background:var(--green);box-shadow:0 0 10px var(--green)}
           </div>
         </div>
         <div class="field"><label>忽略文件</label><input type="text" id="cfIgnore" placeholder=".zip .rar .7z"></div>
-        <div class="field"><label>仅下载</label><input type="text" id="cfInclude" placeholder="关键词（可选）"></div>
+        <div class="field"><label>仅下载</label><input type="text" id="cfInclude" placeholder="关键词"></div>
         <div class="form-row">
           <div class="field"><label>HTTP 代理</label><input type="text" id="cfHttpProxy" placeholder="http://host:port"></div>
           <div class="field"><label>HTTPS 代理</label><input type="text" id="cfHttpsProxy" placeholder="http://host:port"></div>
@@ -162,23 +163,11 @@ header h1 .dot.on{background:var(--green);box-shadow:0 0 10px var(--green)}
         <button class="btn btn-ghost btn-block" id="btnSaveCfg" style="margin-top:4px">保存设置</button>
       </div>
     </div>
-
-    <div class="card hidden" id="histCard">
-      <div class="card-head"><h2>下载记录</h2><span class="meta" id="histCnt"></span></div>
-      <div class="hist-body">
-        <table class="hist-table" id="histTable"></table>
-        <div class="empty hidden" id="histEmpty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><br>暂无记录</div>
-      </div>
-    </div>
-
-    <div class="card hidden" id="slogCard">
-      <div class="card-head"><h2>Session Log</h2></div>
-      <div class="log-scroll" id="slogView" style="padding:10px 18px;color:var(--dim);font-family:var(--mono);font-size:10.5px"></div>
-    </div>
   </div>
 
-  <!-- MAIN -->
+  <!-- MAIN: all output cards -->
   <div class="main-panel">
+    <!-- Progress -->
     <div class="card">
       <div class="card-head"><h2 id="progTitle">实时进度</h2><span class="meta" id="progMeta"></span></div>
       <div class="file-list" id="fileList">
@@ -187,11 +176,27 @@ header h1 .dot.on{background:var(--green);box-shadow:0 0 10px var(--green)}
       <div class="summary hidden" id="summaryBar"></div>
     </div>
 
+    <!-- Event log -->
     <div class="card">
       <div class="card-head"><h2>事件日志</h2></div>
       <div class="log-scroll" id="logList">
         <div class="empty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg><br>等待开始…</div>
       </div>
+    </div>
+
+    <!-- History -->
+    <div class="card hidden" id="histCard">
+      <div class="card-head"><h2>下载记录</h2><span class="meta" id="histCnt"></span></div>
+      <div class="hist-body">
+        <table class="hist-table" id="histTable"></table>
+        <div class="empty hidden" id="histEmpty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><br>暂无记录</div>
+      </div>
+    </div>
+
+    <!-- Session Log -->
+    <div class="card hidden" id="slogCard">
+      <div class="card-head"><h2>Session Log</h2></div>
+      <div class="log-scroll" id="slogView" style="padding:12px 20px;color:var(--dim);font-family:var(--mono);font-size:10.5px"></div>
     </div>
   </div>
 </div>
@@ -213,6 +218,7 @@ const E={
   slogCard:document.getElementById('slogCard'),slogView:document.getElementById('slogView'),
 };
 
+let _pollN=0;
 async function tick(){
   try{
     const r=await fetch('/api/status');const d=await r.json();
@@ -223,8 +229,8 @@ async function tick(){
     E.btnStart.classList.toggle('hidden',d.running);
     E.btnStop.classList.toggle('hidden',!d.running);
   }catch(e){}
-  if(tick.n==null)tick.n=0;tick.n++;
-  if(tick.n%30===0){loadHistory();loadSlog()}
+  _pollN++;
+  if(_pollN%30===0){loadHistory();loadSlog()}
 }
 setInterval(tick,1500);
 
@@ -234,11 +240,11 @@ function renderJob(job,run){
   else if(job.summary){E.progTitle.textContent='任务完成';E.progMeta.textContent=job.summary.time||''}
   else{E.progTitle.textContent='实时进度';E.progMeta.textContent=''}
 
+  // file list
   if(job.files&&job.files.length){
     E.fileList.innerHTML=job.files.map(f=>{
       const ic=f.status==='done'?'✓':f.status==='fail'?'✗':f.status==='skip'?'—':'↓';
-      const cls=f.status;
-      const pct=f.pct||0;
+      const cls=f.status;const pct=f.pct||0;
       const bc=f.status==='done'?'ok':f.status==='fail'?'err':'dl';
       const dls=f.downloaded||'';const sz=f.size||'?';
       return `<div class="file-row ${cls}">
@@ -253,20 +259,21 @@ function renderJob(job,run){
     E.fileList.innerHTML='<div class="empty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><br>等待任务</div>';
   }
 
+  // summary
   if(job.summary){
     const s=job.summary;E.summaryBar.classList.remove('hidden');
-    E.summaryBar.innerHTML=`<div class="stat">✓<span class="n g">${s.completed||0}</span>完成</div><div class="stat">✗<span class="n r">${s.failed||0}</span>失败</div><div class="stat">—<span class="n s">${s.skipped||0}</span>跳过</div><span style="margin-left:auto;color:var(--dim);font-size:11px">${s.time||''}</span>`;
+    E.summaryBar.innerHTML=`<div class="stat">✓ <span class="n g">${s.completed||0}</span></div><div class="stat">✗ <span class="n r">${s.failed||0}</span></div><div class="stat">— <span class="n s">${s.skipped||0}</span></div><span style="margin-left:auto;color:var(--dim);font-size:11px">${s.time||''}</span>`;
   }else if(job.files&&job.files.length){
     const done=job.files.filter(f=>f.status==='done').length;
     const fail=job.files.filter(f=>f.status==='fail').length;
-    const total=job.files.length;
     E.summaryBar.classList.remove('hidden');
-    E.summaryBar.innerHTML=`<div class="stat">${done}/${total} 完成</div>${fail>0?`<div class="stat"><span class="n r">${fail}</span> 失败</div>`:''}`;
+    E.summaryBar.innerHTML=`<div class="stat">${done}/${job.files.length} 完成</div>${fail>0?`<div class="stat"><span class="n r">${fail}</span> 失败</div>`:''}`;
   }else{E.summaryBar.classList.add('hidden')}
 
+  // log
   if(job.logs&&job.logs.length){
     E.logList.innerHTML=job.logs.slice(-60).map(l=>{
-      const c=l.event.toLowerCase().includes('error')||l.event.toLowerCase().includes('fail')?'r':l.event.toLowerCase().includes('skip')?'y':l.event.toLowerCase().includes('start')||l.event.toLowerCase().includes('done')||l.event.toLowerCase().includes('completed')?'g':'';
+      const c=l.event.toLowerCase().includes('error')||l.event.toLowerCase().includes('fail')?'r':l.event.toLowerCase().includes('skip')?'y':/start|done|completed/.test(l.event.toLowerCase())?'g':'';
       return `<div class="log-row"><span class="log-ts">${l.ts||''}</span><span class="log-ev ${c}">${l.event||''}</span><span class="log-detail">${l.details||''}</span></div>`;
     }).join('');
     E.logList.scrollTop=E.logList.scrollHeight;
@@ -336,10 +343,7 @@ async function stopDownload(){
 }
 async function loadHistory(){
   const r=await fetch('/api/history');const items=await r.json();
-  if(!items.length){
-    E.histTable.innerHTML='';E.histEmpty.classList.remove('hidden');E.histCnt.textContent='';
-    E.histCard.classList.remove('hidden');return;
-  }
+  if(!items.length){E.histTable.innerHTML='';E.histEmpty.classList.remove('hidden');E.histCnt.textContent='';E.histCard.classList.remove('hidden');return}
   E.histEmpty.classList.add('hidden');E.histCnt.textContent=`${items.length} 条`;
   E.histTable.innerHTML=`<thead><tr class="mono"><th>#</th><th>时间</th><th>文件名</th><th>大小</th><th>状态</th></tr></thead><tbody>${items.slice(0,50).map(i=>{
     const sz=i.size?(i.size>1e6?(i.size/1e6).toFixed(1)+' MB':(i.size>1e3?(i.size/1e3).toFixed(1)+' KB':i.size+' B')):'—';

@@ -10,6 +10,7 @@ from datetime import datetime
 from pathlib import Path
 
 from flask import Flask, jsonify, render_template, request
+from waitress import serve
 
 app = Flask(__name__)
 
@@ -332,20 +333,32 @@ def api_logs():
 
 @app.route("/api/subdirs", methods=["GET", "POST"])
 def api_subdirs():
+    """List and manage download subdirectories recursively."""
     dl = DOWNLOADS_DIR
     dl.mkdir(parents=True, exist_ok=True)
     if request.method == "POST":
         data = request.get_json(force=True)
-        name = data.get("name", "").strip().strip("/")
-        if name and "/" not in name:
-            (dl / name).mkdir(parents=True, exist_ok=True)
+        rel = data.get("name", "").strip().strip("/")
+        if rel and "/" not in rel and ".." not in rel:
+            (dl / rel).mkdir(parents=True, exist_ok=True)
         return jsonify({"ok": True})
-    dirs = [
-        {"name": d.name, "path": f"/data/downloads/{d.name}"}
-        for d in sorted(dl.iterdir()) if d.is_dir()
-    ]
-    dirs.insert(0, {"name": "(根目录)", "path": "/data/downloads"})
+    # Recursive listing
+    dirs = [{"name": "(根目录)", "path": "/data/downloads"}]
+    _walk_subdirs(dl, "", dirs)
+    dirs.sort(key=lambda d: d["name"])
+    # keep root first
     return jsonify(dirs)
+
+
+def _walk_subdirs(base: Path, prefix: str, out: list):
+    try:
+        for child in sorted(base.iterdir()):
+            if child.is_dir() and not child.name.startswith("."):
+                rel = f"{prefix}/{child.name}" if prefix else child.name
+                out.append({"name": rel, "path": str(child)})
+                _walk_subdirs(child, rel, out)
+    except PermissionError:
+        pass
 
 
 @app.route("/api/start", methods=["POST"])
@@ -403,4 +416,4 @@ def api_urls():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8877, debug=False)
+    serve(app, host="0.0.0.0", port=8877)

@@ -14,7 +14,7 @@ WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir flask
+    pip install --no-cache-dir flask waitress
 
 COPY webui/ webui/
 COPY scripts/ scripts/

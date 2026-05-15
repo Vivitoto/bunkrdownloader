@@ -150,12 +150,13 @@ header h1 span.dot.running{background:var(--green);box-shadow:0 0 8px var(--gree
         <div class="field">
           <label>下载子目录</label>
           <div style="display:flex;gap:6px">
-            <select id="setDownloadSubdir"><option value="">(根目录)</option></select>
+            <select id="setDownloadSubdir" style="flex:1"><option value="">(根目录) /data/downloads</option></select>
             <button class="btn btn-ghost btn-sm" id="btnRefreshSubdirs" title="刷新列表">↻</button>
+            <button class="btn btn-ghost btn-sm" id="btnCreateSubdir" title="新建目录">+</button>
           </div>
-          <div style="display:flex;gap:6px;margin-top:4px">
-            <input type="text" id="setNewSubdir" placeholder="新建目录…" style="flex:1;font-size:11px">
-            <button class="btn btn-ghost btn-sm" id="btnCreateSubdir">+</button>
+          <div id="newSubdirRow" class="hidden" style="display:flex;gap:6px;margin-top:4px">
+            <input type="text" id="setNewSubdir" placeholder="新目录名 (不含/)" style="flex:1;font-size:11px">
+            <button class="btn btn-ghost btn-sm" id="btnConfirmSubdir">✓</button>
           </div>
         </div>
         <div class="field"><label>忽略列表</label><input type="text" id="setIgnoreList" placeholder=".zip .rar .7z"></div>
@@ -339,12 +340,26 @@ async function saveSettings() {
 }
 async function refreshSubdirs(cur) {
   const r=await fetch('/api/subdirs');const dirs=await r.json();
-  E.dlSubdir.innerHTML=dirs.map(d=>`<option value="${d.name==='(根目录)'?'':d.name}" ${d.name===cur||(!cur&&d.name==='(根目录)')?'selected':''}>${d.name}</option>`).join('');
+  E.dlSubdir.innerHTML=dirs.map((d,i)=>{
+    const depth=(d.name.match(/\//g)||[]).length;
+    const pad='\u00A0\u00A0'.repeat(depth);
+    const label=d.name==='(根目录)'?'(根目录) /data/downloads':pad+'└ '+d.name.split('/').pop();
+    const val=d.name==='(根目录)'?'':d.name;
+    const sel=(!cur&&d.name==='(根目录)')||(cur&&d.name===cur)?' selected':'';
+    return `<option value="${val}"${sel}>${label}</option>`;
+  }).join('');
 }
-async function createSubdir() {
+function toggleNewSubdir() {
+  const row=document.getElementById('newSubdirRow');
+  row.classList.toggle('hidden');
+  if(!row.classList.contains('hidden')) document.getElementById('setNewSubdir').focus();
+}
+async function confirmSubdir() {
   const n=E.newSubdir.value.trim();if(!n)return;
   await fetch('/api/subdirs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n})});
-  E.newSubdir.value='';await refreshSubdirs(n);E.dlSubdir.value=n;
+  E.newSubdir.value='';
+  await refreshSubdirs(n);E.dlSubdir.value=n;
+  document.getElementById('newSubdirRow').classList.add('hidden');
 }
 
 // ── URLs ──
@@ -395,7 +410,9 @@ E.btnStart.addEventListener('click',startDownload);
 E.btnStop.addEventListener('click',stopDownload);
 E.btnSaveSettings.addEventListener('click',saveSettings);
 E.btnRefreshSubdirs.addEventListener('click',()=>refreshSubdirs(E.dlSubdir.value));
-E.btnCreateSubdir.addEventListener('click',createSubdir);
+E.btnCreateSubdir.addEventListener('click',toggleNewSubdir);
+E.confirmSubdir=el('btnConfirmSubdir');
+E.confirmSubdir.addEventListener('click',confirmSubdir);
 E.urls.addEventListener('input',()=>{
   const n=E.urls.value.split('\n').filter(l=>l.trim()).length;
   E.urlHint.textContent=n?`${n} 个 URL (未保存)`:'';

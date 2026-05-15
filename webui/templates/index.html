@@ -6,431 +6,368 @@
 <title>BunkrDownloader</title>
 <style>
 :root {
-  --bg:#0a0a0f; --card:#111118; --border:#1e1e2e; --text:#d4d4d8;
-  --dim:#71717a; --accent:#818cf8; --green:#34d399; --red:#f87171;
-  --yellow:#fbbf24; --cyan:#22d3ee; --radius:10px;
+  --bg:#060609; --card:#0c0c14; --border:#1a1a2e; --text:#e2e2e8;
+  --dim:#6b6b7b; --accent:#7c8cf8; --green:#3ecf8e; --red:#ef6b6b;
+  --yellow:#f0b95e; --radius:12px; --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono','SF Mono','Cascadia Code',monospace;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 
 /* header */
-header{background:var(--card);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
-header h1{font-size:17px;font-weight:600;display:flex;align-items:center;gap:10px}
-header h1 span.dot{width:7px;height:7px;border-radius:50%;background:var(--dim);display:inline-block}
-header h1 span.dot.running{background:var(--green);box-shadow:0 0 8px var(--green)}
-.status-text{font-size:12px;color:var(--dim)}
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border)}
+header h1{font-size:16px;font-weight:600;display:flex;align-items:center;gap:10px;letter-spacing:-.01em}
+header h1 .dot{width:6px;height:6px;border-radius:50%;background:var(--dim);display:inline-block;transition:all .3s}
+header h1 .dot.on{background:var(--green);box-shadow:0 0 10px var(--green)}
+.status-tag{font-size:11px;padding:3px 10px;border-radius:20px;background:var(--border);color:var(--dim);transition:all .3s}
+.status-tag.on{background:#0a2e1f;color:var(--green)}
 
 /* layout */
-.layout{display:grid;grid-template-columns:380px 1fr;gap:16px;padding:20px;max-width:1300px;margin:0 auto;min-height:calc(100vh - 60px)}
+.layout{display:grid;grid-template-columns:360px 1fr;gap:18px;padding:20px;max-width:1320px;margin:0 auto;min-height:calc(100vh - 58px);align-items:start}
 
 /* cards */
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-.card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.card-header h2{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--dim)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .2s}
+.card:hover{border-color:#252540}
+.card-head{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-head h2{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--dim)}
+.card-head .meta{font-size:11px;color:var(--dim)}
 .card-body{padding:16px 18px}
+.card-body.flat{padding:0}
 
 /* sidebar */
-.sidebar{display:flex;flex-direction:column;gap:12px}
+.sidebar{display:flex;flex-direction:column;gap:14px;position:sticky;top:20px}
 
 /* form */
-.form-row{display:flex;gap:10px}
-.form-row>*{flex:1}
-.field{margin-bottom:10px}
-.field label{display:block;font-size:11px;color:var(--dim);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
-.field input,.field textarea,.field select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12.5px;font-family:inherit;resize:vertical;transition:border-color .2s}
-.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--accent)}
-.field textarea{min-height:100px;font-family:'JetBrains Mono','SF Mono',monospace;font-size:11px;line-height:1.5}
-.field .hint{font-size:10px;color:var(--dim);margin-top:3px}
+.field{margin-bottom:11px}
+.field label{display:block;font-size:10.5px;color:var(--dim);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.field input,.field textarea,.field select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 11px;color:var(--text);font-size:12.5px;font-family:inherit;outline:none;transition:border-color .15s,box-shadow .15s}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(124,140,248,.1)}
+.field textarea{min-height:96px;font-family:var(--mono);font-size:11px;line-height:1.6;resize:vertical}
+.form-row{display:flex;gap:10px}.form-row>*{flex:1}
 
 /* buttons */
-.btn{padding:7px 18px;border-radius:6px;border:none;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
-.btn:hover{filter:brightness(1.2)}
-.btn-primary{background:var(--accent);color:#fff}
-.btn-green{background:var(--green);color:#000}
-.btn-red{background:var(--red);color:#fff}
+.btn{padding:8px 20px;border-radius:8px;border:none;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:var(--font)}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn-pri{background:var(--accent);color:#fff}
+.btn-on{background:var(--green);color:#000}
+.btn-off{background:var(--red);color:#fff}
 .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
-.btn-sm{padding:4px 10px;font-size:11px}
-.btn-block{width:100%;justify-content:center}
+.btn-block{width:100%}
+.btn-sm{padding:5px 12px;font-size:11px;border-radius:6px}
 .btn-group{display:flex;gap:8px;margin-top:10px}
 
 /* right panel */
-.main-panel{display:flex;flex-direction:column;gap:12px;min-height:0}
+.main-panel{display:flex;flex-direction:column;gap:14px}
 
-/* progress area */
-.progress-card .card-body{padding:0}
-.file-list{max-height:360px;overflow-y:auto}
-.file-row{display:flex;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid var(--border);font-size:12.5px;transition:background .2s}
+/* file list */
+.file-row{display:flex;align-items:center;gap:12px;padding:9px 18px;border-bottom:1px solid rgba(255,255,255,.03);font-size:12.5px;transition:background .15s}
 .file-row:last-child{border-bottom:none}
-.file-row:hover{background:rgba(255,255,255,.02)}
-.file-icon{width:20px;text-align:center;flex-shrink:0;font-size:14px}
+.file-row:hover{background:rgba(255,255,255,.015)}
+.file-dot{width:18px;text-align:center;flex-shrink:0;font-size:12px}
 .file-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.file-size{color:var(--dim);font-size:11px;flex-shrink:0;width:70px;text-align:right}
-.file-pct{color:var(--dim);font-size:11px;flex-shrink:0;width:48px;text-align:right}
-.file-bar{flex-shrink:0;width:80px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
-.file-bar-fill{height:100%;border-radius:2px;transition:width .4s,background .4s}
-.file-bar-fill.downloading{background:var(--accent)}
-.file-bar-fill.done{background:var(--green)}
-.file-bar-fill.fail{background:var(--red)}
-.file-row.done .file-name{color:var(--green)}
-.file-row.fail .file-name{color:var(--red)}
+.file-meta{color:var(--dim);font-size:10.5px;flex-shrink:0;width:72px;text-align:right}
+.file-pct{color:var(--dim);font-size:10.5px;flex-shrink:0;width:42px;text-align:right}
+.file-bar{flex-shrink:0;width:72px;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.file-bar-inner{height:100%;border-radius:2px;transition:width .4s,background .4s}
+.file-bar-inner.dl{background:var(--accent)}
+.file-bar-inner.ok{background:var(--green)}
+.file-bar-inner.err{background:var(--red)}
+.file-row.ok .file-name{color:var(--green)}
+.file-row.err .file-name{color:var(--red)}
 .file-row.skip .file-name{color:var(--dim);text-decoration:line-through}
 
-/* summary bar */
-.summary-bar{display:flex;gap:16px;padding:10px 18px;border-top:1px solid var(--border);font-size:12px}
-.summary-bar .stat{display:flex;align-items:center;gap:5px}
-.summary-bar .stat-val{font-weight:700}
-.summary-bar .stat-val.ok{color:var(--green)}
-.summary-bar .stat-val.fail{color:var(--red)}
-.summary-bar .stat-val.skip{color:var(--dim)}
+/* summary */
+.summary{display:flex;gap:20px;padding:10px 18px;border-top:1px solid var(--border);font-size:12px}
+.summary .stat{display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+.summary .n{font-weight:700}
+.summary .n.g{color:var(--green)}.summary .n.r{color:var(--red)}.summary .n.s{color:var(--dim)}
 
-/* log area */
-.log-card .card-body{padding:0}
-.log-list{max-height:280px;overflow-y:auto;font-family:'JetBrains Mono','SF Mono',monospace;font-size:11.5px}
-.log-row{display:flex;gap:10px;padding:5px 18px;border-bottom:1px solid rgba(255,255,255,.03);line-height:1.5}
-.log-row:hover{background:rgba(255,255,255,.015)}
-.log-ts{color:var(--dim);flex-shrink:0;width:52px}
-.log-event{flex-shrink:0;font-weight:600;min-width:70px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* log */
+.log-scroll{max-height:260px;overflow-y:auto;font-family:var(--mono);font-size:11px;line-height:1.6}
+.log-row{display:flex;gap:8px;padding:4px 18px;border-bottom:1px solid rgba(255,255,255,.02)}
+.log-row:hover{background:rgba(255,255,255,.01)}
+.log-ts{color:var(--dim);flex-shrink:0;width:48px;font-size:10.5px}
+.log-ev{flex-shrink:0;font-weight:600;min-width:64px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10.5px}
 .log-detail{flex:1;color:var(--dim);min-width:0;word-break:break-all}
-.log-event.start,.log-event.done,.log-event.completed{color:var(--green)}
-.log-event.fail,.log-event.error{color:var(--red)}
-.log-event.skip{color:var(--yellow)}
-.log-event.info{color:var(--cyan)}
+.log-ev.g{color:var(--green)}.log-ev.r{color:var(--red)}.log-ev.y{color:var(--yellow)}
 
-/* downloads tab */
-.dl-table{width:100%;border-collapse:collapse;font-size:12px}
-.dl-table th{text-align:left;padding:8px 12px;font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
-.dl-table td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04)}
-.dl-table tr:hover{background:rgba(255,255,255,.02)}
-.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600}
-.badge-album{background:#1e1b4b;color:var(--accent)}
-.badge-file{background:#064e3b;color:var(--green)}
+/* history table */
+.hist-table{width:100%;border-collapse:collapse;font-size:12px}
+.hist-table th{text-align:left;padding:7px 12px;font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--card)}
+.hist-table td{padding:7px 12px;border-bottom:1px solid rgba(255,255,255,.03);font-variant-numeric:tabular-nums}
+.hist-table tr:hover td{background:rgba(255,255,255,.015)}
+.hist-table .fn{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-body{max-height:340px;overflow-y:auto}
 
 /* empty */
-.empty{text-align:center;color:var(--dim);padding:40px 0;font-size:13px}
-.empty-icon{font-size:32px;margin-bottom:8px;opacity:.4}
+.empty{text-align:center;color:var(--dim);padding:48px 0;font-size:13px}
+.empty svg{opacity:.15;margin-bottom:10px}
 
-/* responsive */
-@media(max-width:860px){.layout{grid-template-columns:1fr}}
+/* utility */
+.hidden{display:none!important}
+.mono{font-family:var(--mono)}
+@media(max-width:860px){.layout{grid-template-columns:1fr}.sidebar{position:static}}
 </style>
 </head>
 <body>
 <header>
-  <h1><span>📦 BunkrDownloader</span><span class="dot" id="hdDot"></span></h1>
-  <div class="status-text" id="hdStatus">就绪</div>
+  <h1><span class="dot" id="hdDot"></span>BunkrDownloader</h1>
+  <span class="status-tag" id="hdStatus">就绪</span>
 </header>
 
 <div class="layout">
-  <!-- sidebar -->
+  <!-- SIDEBAR -->
   <div class="sidebar">
-    <!-- URLs -->
     <div class="card">
-      <div class="card-header"><h2>📋 URL 列表</h2></div>
+      <div class="card-head"><h2>URL 列表</h2><span class="meta" id="urlCnt"></span></div>
       <div class="card-body">
         <div class="field">
           <textarea id="urlsInput" placeholder="https://bunkr.si/a/...&#10;https://bunkr.fi/f/...&#10;每行一个 URL"></textarea>
-          <div class="hint" id="urlHint"></div>
         </div>
         <div class="btn-group">
-          <button class="btn btn-primary btn-block" id="btnStart">▶ 开始下载</button>
-          <button class="btn btn-red btn-block hidden" id="btnStop">⏹ 停止</button>
+          <button class="btn btn-on btn-block" id="btnStart">▶ 开始下载</button>
+          <button class="btn btn-off btn-block hidden" id="btnStop">⏹ 停止</button>
         </div>
       </div>
     </div>
 
-    <!-- Settings -->
     <div class="card">
-      <div class="card-header"><h2>⚙ 设置</h2></div>
+      <div class="card-head"><h2>设置</h2></div>
       <div class="card-body">
         <div class="form-row">
-          <div class="field"><label>并发数</label><input type="number" id="setConcurrency" min="1" max="10" value="3"></div>
-          <div class="field"><label>重试次数</label><input type="number" id="setMaxRetries" min="0" max="20" value="5"></div>
+          <div class="field"><label>并发</label><input type="number" id="cfConcurrency" min="1" max="10"></div>
+          <div class="field"><label>重试</label><input type="number" id="cfRetries" min="0" max="20"></div>
         </div>
         <div class="field">
           <label>下载子目录</label>
           <div style="display:flex;gap:6px">
-            <select id="setDownloadSubdir" style="flex:1"><option value="">(根目录) /data/downloads</option></select>
-            <button class="btn btn-ghost btn-sm" id="btnRefreshSubdirs" title="刷新列表">↻</button>
-            <button class="btn btn-ghost btn-sm" id="btnCreateSubdir" title="新建目录">+</button>
+            <select id="cfSubdir" style="flex:1"><option value="">/data/downloads</option></select>
+            <button class="btn btn-ghost btn-sm" id="btnRefreshDirs">↻</button>
+            <button class="btn btn-ghost btn-sm" id="btnNewDir">+</button>
           </div>
-          <div id="newSubdirRow" class="hidden" style="display:flex;gap:6px;margin-top:4px">
-            <input type="text" id="setNewSubdir" placeholder="新目录名 (不含/)" style="flex:1;font-size:11px">
-            <button class="btn btn-ghost btn-sm" id="btnConfirmSubdir">✓</button>
+          <div id="newDirRow" class="hidden" style="display:flex;gap:6px;margin-top:4px">
+            <input type="text" id="cfNewDir" placeholder="新目录名" style="flex:1;font-size:11px">
+            <button class="btn btn-ghost btn-sm" id="btnConfirmDir">✓</button>
           </div>
         </div>
-        <div class="field"><label>忽略列表</label><input type="text" id="setIgnoreList" placeholder=".zip .rar .7z"></div>
-        <div class="field"><label>包含列表</label><input type="text" id="setIncludeList" placeholder="仅下载含关键词的文件"></div>
+        <div class="field"><label>忽略文件</label><input type="text" id="cfIgnore" placeholder=".zip .rar .7z"></div>
+        <div class="field"><label>仅下载</label><input type="text" id="cfInclude" placeholder="关键词（可选）"></div>
         <div class="form-row">
-          <div class="field"><label>HTTP 代理</label><input type="text" id="setHttpProxy" placeholder="http://host:port"></div>
-          <div class="field"><label>HTTPS 代理</label><input type="text" id="setHttpsProxy" placeholder="http://host:port"></div>
+          <div class="field"><label>HTTP 代理</label><input type="text" id="cfHttpProxy" placeholder="http://host:port"></div>
+          <div class="field"><label>HTTPS 代理</label><input type="text" id="cfHttpsProxy" placeholder="http://host:port"></div>
         </div>
-        <button class="btn btn-ghost btn-block" id="btnSaveSettings" style="margin-top:6px">保存设置</button>
+        <button class="btn btn-ghost btn-block" id="btnSaveCfg" style="margin-top:4px">保存设置</button>
       </div>
     </div>
 
-    <!-- History (sidebar bottom) -->
-    <div class="card hidden" id="dlCard">
-      <div class="card-header"><h2>📋 下载记录</h2></div>
-      <div class="card-body" id="dlContent" style="font-size:12px;padding:0">
-        <div class="empty">加载中…</div>
+    <div class="card hidden" id="histCard">
+      <div class="card-head"><h2>下载记录</h2><span class="meta" id="histCnt"></span></div>
+      <div class="hist-body">
+        <table class="hist-table" id="histTable"></table>
+        <div class="empty hidden" id="histEmpty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><br>暂无记录</div>
       </div>
     </div>
-    <div class="card hidden" id="logCard">
-      <div class="card-header"><h2>📄 Session Log</h2></div>
-      <div class="card-body" style="padding:0">
-        <div class="log-list" id="sessionLogView" style="max-height:300px;padding:12px 18px;font-size:11px;color:var(--dim)"></div>
-      </div>
+
+    <div class="card hidden" id="slogCard">
+      <div class="card-head"><h2>Session Log</h2></div>
+      <div class="log-scroll" id="slogView" style="padding:10px 18px;color:var(--dim);font-family:var(--mono);font-size:10.5px"></div>
     </div>
   </div>
 
-  <!-- main panel -->
+  <!-- MAIN -->
   <div class="main-panel">
-    <!-- Progress -->
-    <div class="card progress-card">
-      <div class="card-header">
-        <h2 id="progressTitle">📡 实时进度</h2>
-        <span style="font-size:11px;color:var(--dim)" id="progressSub"></span>
-      </div>
+    <div class="card">
+      <div class="card-head"><h2 id="progTitle">实时进度</h2><span class="meta" id="progMeta"></span></div>
       <div class="file-list" id="fileList">
-        <div class="empty"><div class="empty-icon">📭</div>暂无任务</div>
+        <div class="empty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><br>等待任务</div>
       </div>
-      <div class="summary-bar hidden" id="summaryBar"></div>
+      <div class="summary hidden" id="summaryBar"></div>
     </div>
 
-    <!-- Event log -->
-    <div class="card log-card">
-      <div class="card-header"><h2>📟 事件日志</h2></div>
-      <div class="log-list" id="logList">
-        <div class="empty"><div class="empty-icon">📝</div>等待开始…</div>
+    <div class="card">
+      <div class="card-head"><h2>事件日志</h2></div>
+      <div class="log-scroll" id="logList">
+        <div class="empty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg><br>等待开始…</div>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-// ── elements ──
-const el = id => document.getElementById(id);
 const E={
-  urls:el('urlsInput'),urlHint:el('urlHint'),btnStart:el('btnStart'),btnStop:el('btnStop'),
-  concurrency:el('setConcurrency'),maxRetries:el('setMaxRetries'),
-  dlSubdir:el('setDownloadSubdir'),newSubdir:el('setNewSubdir'),
-  ignore:el('setIgnoreList'),include:el('setIncludeList'),
-  httpProxy:el('setHttpProxy'),httpsProxy:el('setHttpsProxy'),
-  fileList:el('fileList'),logList:el('logList'),progressTitle:el('progressTitle'),
-  progressSub:el('progressSub'),summaryBar:el('summaryBar'),
-  hdDot:el('hdDot'),hdStatus:el('hdStatus'),
-  dlCard:el('dlCard'),dlContent:el('dlContent'),
-  logCard:el('logCard'),sessionLogView:el('sessionLogView'),
+  hdDot:document.getElementById('hdDot'),hdStatus:document.getElementById('hdStatus'),
+  urlsInput:document.getElementById('urlsInput'),urlCnt:document.getElementById('urlCnt'),
+  btnStart:document.getElementById('btnStart'),btnStop:document.getElementById('btnStop'),
+  cfConcurrency:document.getElementById('cfConcurrency'),cfRetries:document.getElementById('cfRetries'),
+  cfSubdir:document.getElementById('cfSubdir'),cfNewDir:document.getElementById('cfNewDir'),
+  cfIgnore:document.getElementById('cfIgnore'),cfInclude:document.getElementById('cfInclude'),
+  cfHttpProxy:document.getElementById('cfHttpProxy'),cfHttpsProxy:document.getElementById('cfHttpsProxy'),
+  fileList:document.getElementById('fileList'),logList:document.getElementById('logList'),
+  progTitle:document.getElementById('progTitle'),progMeta:document.getElementById('progMeta'),
+  summaryBar:document.getElementById('summaryBar'),
+  histCard:document.getElementById('histCard'),histTable:document.getElementById('histTable'),
+  histCnt:document.getElementById('histCnt'),histEmpty:document.getElementById('histEmpty'),
+  slogCard:document.getElementById('slogCard'),slogView:document.getElementById('slogView'),
 };
 
-// ── polling ──
-let lastJobLen = 0;
-
-async function tick() {
-  try {
+async function tick(){
+  try{
     const r=await fetch('/api/status');const d=await r.json();
-    renderJob(d.job, d.running);
-    E.hdDot.className='dot'+(d.running?' running':'');
+    renderJob(d.job,d.running);
+    E.hdDot.className='dot'+(d.running?' on':'');
     E.hdStatus.textContent=d.running?'运行中':'就绪';
-    if (d.running) {
-      E.btnStart.classList.add('hidden');
-      E.btnStop.classList.remove('hidden');
-    } else {
-      E.btnStart.classList.remove('hidden');
-      E.btnStop.classList.add('hidden');
-    }
-  } catch(e) {}
-  // periodically refresh downloads & session log
-  if (tick.count==null) tick.count=0;
-  tick.count++;
-  if (tick.count%15===0) { refreshHistory(); refreshSessionLog(); }
+    E.hdStatus.className='status-tag'+(d.running?' on':'');
+    E.btnStart.classList.toggle('hidden',d.running);
+    E.btnStop.classList.toggle('hidden',!d.running);
+  }catch(e){}
+  if(tick.n==null)tick.n=0;tick.n++;
+  if(tick.n%30===0){loadHistory();loadSlog()}
 }
-setInterval(tick, 1500);
+setInterval(tick,1500);
 
-function renderJob(job) {
-  if (!job) return;
+function renderJob(job,run){
+  if(!job)return;
+  if(run){E.progTitle.textContent='实时进度';E.progMeta.textContent=''}
+  else if(job.summary){E.progTitle.textContent='任务完成';E.progMeta.textContent=job.summary.time||''}
+  else{E.progTitle.textContent='实时进度';E.progMeta.textContent=''}
 
-  // progress title
-  if (job.phase==='running') {
-    E.progressTitle.textContent = '📡 实时进度';
-    E.progressSub.textContent = '';
-  } else if (job.phase==='idle' && job.summary) {
-    E.progressTitle.textContent = '✅ 任务完成';
-    E.progressSub.textContent = '';
-  } else {
-    E.progressTitle.textContent = '📡 实时进度';
-    E.progressSub.textContent = '';
-  }
-
-  // file list
-  if (job.files && job.files.length) {
-    E.fileList.innerHTML = job.files.map(f => {
-      const icon = f.status==='done'?'✅':f.status==='fail'?'❌':f.status==='skip'?'⏭️':'⬇️';
-      const cls = f.status;
-      const pct = f.pct||0;
-      const barCls = f.status==='done'?'done':f.status==='fail'?'fail':'downloading';
-      const dls = f.downloaded||'';
-      const sz = f.size||'?';
+  if(job.files&&job.files.length){
+    E.fileList.innerHTML=job.files.map(f=>{
+      const ic=f.status==='done'?'✓':f.status==='fail'?'✗':f.status==='skip'?'—':'↓';
+      const cls=f.status;
+      const pct=f.pct||0;
+      const bc=f.status==='done'?'ok':f.status==='fail'?'err':'dl';
+      const dls=f.downloaded||'';const sz=f.size||'?';
       return `<div class="file-row ${cls}">
-        <span class="file-icon">${icon}</span>
+        <span class="file-dot">${ic}</span>
         <span class="file-name" title="${f.name}">${f.name}</span>
-        <span class="file-size">${dls ? dls+' / '+sz : sz}</span>
-        <span class="file-pct">${pct>0?pct+'%':''}</span>
-        <span class="file-bar"><span class="file-bar-fill ${barCls}" style="width:${pct}%"></span></span>
+        <span class="file-meta">${dls?dls+' / '+sz:sz}</span>
+        <span class="file-pct">${pct>0?Math.round(pct)+'%':''}</span>
+        <span class="file-bar"><span class="file-bar-inner ${bc}" style="width:${pct}%"></span></span>
       </div>`;
     }).join('');
-  } else if (job.phase==='idle' && !job.summary) {
-    E.fileList.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>暂无任务</div>';
+  }else if(!run&&!job.summary){
+    E.fileList.innerHTML='<div class="empty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><br>等待任务</div>';
   }
 
-  // summary
-  if (job.summary) {
-    const s=job.summary;
-    E.summaryBar.classList.remove('hidden');
-    E.summaryBar.innerHTML = `
-      <div class="stat">✅ 完成 <span class="stat-val ok">${s.completed||0}</span></div>
-      <div class="stat">❌ 失败 <span class="stat-val fail">${s.failed||0}</span></div>
-      <div class="stat">⏭️ 跳过 <span class="stat-val skip">${s.skipped||0}</span></div>
-      <div class="stat" style="margin-left:auto">⏱ ${s.time||''}</div>`;
-  } else if (job.files && job.files.length) {
+  if(job.summary){
+    const s=job.summary;E.summaryBar.classList.remove('hidden');
+    E.summaryBar.innerHTML=`<div class="stat">✓<span class="n g">${s.completed||0}</span>完成</div><div class="stat">✗<span class="n r">${s.failed||0}</span>失败</div><div class="stat">—<span class="n s">${s.skipped||0}</span>跳过</div><span style="margin-left:auto;color:var(--dim);font-size:11px">${s.time||''}</span>`;
+  }else if(job.files&&job.files.length){
     const done=job.files.filter(f=>f.status==='done').length;
     const fail=job.files.filter(f=>f.status==='fail').length;
     const total=job.files.length;
     E.summaryBar.classList.remove('hidden');
-    E.summaryBar.innerHTML = `<div class="stat">📊 ${done}/${total} 完成</div>${fail>0?`<div class="stat">❌ <span class="stat-val fail">${fail}</span> 失败</div>`:''}`;
-  } else {
-    E.summaryBar.classList.add('hidden');
-  }
+    E.summaryBar.innerHTML=`<div class="stat">${done}/${total} 完成</div>${fail>0?`<div class="stat"><span class="n r">${fail}</span> 失败</div>`:''}`;
+  }else{E.summaryBar.classList.add('hidden')}
 
-  // log list
-  if (job.logs && job.logs.length) {
-    E.logList.innerHTML = job.logs.slice(-80).map(l => {
-      const cls = l.event.toLowerCase().includes('error')||l.event.toLowerCase().includes('fail')?'error':
-                  l.event.toLowerCase().includes('skip')?'skip':
-                  l.event.toLowerCase().includes('start')||l.event.toLowerCase().includes('done')||l.event.toLowerCase().includes('completed')?'done':
-                  '';
-      return `<div class="log-row">
-        <span class="log-ts">${l.ts||''}</span>
-        <span class="log-event ${cls}">${l.event||''}</span>
-        <span class="log-detail">${l.details||''}</span>
-      </div>`;
+  if(job.logs&&job.logs.length){
+    E.logList.innerHTML=job.logs.slice(-60).map(l=>{
+      const c=l.event.toLowerCase().includes('error')||l.event.toLowerCase().includes('fail')?'r':l.event.toLowerCase().includes('skip')?'y':l.event.toLowerCase().includes('start')||l.event.toLowerCase().includes('done')||l.event.toLowerCase().includes('completed')?'g':'';
+      return `<div class="log-row"><span class="log-ts">${l.ts||''}</span><span class="log-ev ${c}">${l.event||''}</span><span class="log-detail">${l.details||''}</span></div>`;
     }).join('');
-    E.logList.scrollTop = E.logList.scrollHeight;
-  } else if (job.phase==='idle' && !job.summary) {
-    E.logList.innerHTML = '<div class="empty"><div class="empty-icon">📝</div>等待开始…</div>';
+    E.logList.scrollTop=E.logList.scrollHeight;
+  }else if(!run&&!job.summary){
+    E.logList.innerHTML='<div class="empty"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg><br>等待开始…</div>';
   }
 }
 
-// ── settings ──
-async function loadSettings() {
+async function loadSettings(){
   const r=await fetch('/api/settings');const s=await r.json();
-  E.concurrency.value=s.concurrency||3;E.maxRetries.value=s.maxRetries||5;
-  E.ignore.value=s.ignoreList||'';E.include.value=s.includeList||'';
-  E.httpProxy.value=s.httpProxy||'';E.httpsProxy.value=s.httpsProxy||'';
-  await refreshSubdirs(s.downloadSubdir||'');
+  E.cfConcurrency.value=s.concurrency||3;E.cfRetries.value=s.maxRetries||5;
+  E.cfIgnore.value=s.ignoreList||'';E.cfInclude.value=s.includeList||'';
+  E.cfHttpProxy.value=s.httpProxy||'';E.cfHttpsProxy.value=s.httpsProxy||'';
+  await loadSubdirs(s.downloadSubdir||'');
 }
-async function saveSettings() {
-  await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      concurrency:parseInt(E.concurrency.value),maxRetries:parseInt(E.maxRetries.value),
-      downloadPath:'/data/downloads',downloadSubdir:E.dlSubdir.value,
-      ignoreList:E.ignore.value,includeList:E.include.value,
-      httpProxy:E.httpProxy.value.trim(),httpsProxy:E.httpsProxy.value.trim()
-    })});
-  alert('设置已保存 ✓');
+async function saveSettings(){
+  await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    concurrency:+E.cfConcurrency.value,maxRetries:+E.cfRetries.value,downloadPath:'/data/downloads',
+    downloadSubdir:E.cfSubdir.value,ignoreList:E.cfIgnore.value,includeList:E.cfInclude.value,
+    httpProxy:E.cfHttpProxy.value.trim(),httpsProxy:E.cfHttpsProxy.value.trim()
+  })});
+  alert('已保存');
 }
-async function refreshSubdirs(cur) {
+async function loadSubdirs(cur){
   const r=await fetch('/api/subdirs');const dirs=await r.json();
-  E.dlSubdir.innerHTML=dirs.map((d,i)=>{
+  E.cfSubdir.innerHTML=dirs.map((d,i)=>{
     const depth=(d.name.match(/\//g)||[]).length;
     const pad='\u00A0\u00A0'.repeat(depth);
-    const label=d.name==='(根目录)'?'(根目录) /data/downloads':pad+'└ '+d.name.split('/').pop();
+    const label=d.name==='(根目录)'?'/data/downloads':pad+'└ '+d.name.split('/').pop();
     const val=d.name==='(根目录)'?'':d.name;
     const sel=(!cur&&d.name==='(根目录)')||(cur&&d.name===cur)?' selected':'';
     return `<option value="${val}"${sel}>${label}</option>`;
   }).join('');
 }
-function toggleNewSubdir() {
-  const row=document.getElementById('newSubdirRow');
+function toggleNewDir(){
+  const row=document.getElementById('newDirRow');
   row.classList.toggle('hidden');
-  if(!row.classList.contains('hidden')) document.getElementById('setNewSubdir').focus();
+  if(!row.classList.contains('hidden'))E.cfNewDir.focus();
 }
-async function confirmSubdir() {
-  const n=E.newSubdir.value.trim();if(!n)return;
+async function confirmDir(){
+  const n=E.cfNewDir.value.trim();if(!n)return;
   await fetch('/api/subdirs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n})});
-  E.newSubdir.value='';
-  await refreshSubdirs(n);E.dlSubdir.value=n;
-  document.getElementById('newSubdirRow').classList.add('hidden');
+  E.cfNewDir.value='';await loadSubdirs(n);E.cfSubdir.value=n;
+  document.getElementById('newDirRow').classList.add('hidden');
 }
-
-// ── URLs ──
-async function loadUrls() {
+async function loadUrls(){
   const r=await fetch('/api/urls');const d=await r.json();
-  E.urls.value=d.urls.join('\n');
-  E.urlHint.textContent=d.urls.length?`已保存 ${d.urls.length} 个 URL`:'';
+  E.urlsInput.value=d.urls.join('\n');
+  E.urlCnt.textContent=d.urls.length?`${d.urls.length} 个 URL`:'';
 }
-async function saveUrls() {
-  const lines=E.urls.value.split('\n').map(l=>l.trim()).filter(l=>l);
-  await fetch('/api/urls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({urls:lines})});
-  E.urlHint.textContent=`已保存 ${lines.length} 个 URL`;
-}
+E.urlsInput.addEventListener('input',()=>{
+  const n=E.urlsInput.value.split('\n').filter(l=>l.trim()).length;
+  E.urlCnt.textContent=n?`${n} 个 URL`:'';
+});
 
-// ── start / stop ──
-async function startDownload() {
-  const lines=E.urls.value.split('\n').map(l=>l.trim()).filter(l=>l);
-  if(!lines.length) return alert('请至少输入一个 URL');
+async function startDownload(){
+  const lines=E.urlsInput.value.split('\n').map(l=>l.trim()).filter(l=>l);
+  if(!lines.length)return alert('请至少输入一个 URL');
   if(!confirm(`开始下载 ${lines.length} 个 URL？`))return;
-  await saveUrls();
+  await fetch('/api/urls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({urls:lines})});
   const r=await fetch('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({urls:lines})});
-  const d=await r.json();if(!d.ok) alert(d.error);
+  const d=await r.json();if(!d.ok)alert(d.error);
 }
-async function stopDownload() {
+async function stopDownload(){
   if(!confirm('确认停止？'))return;
   await fetch('/api/stop',{method:'POST'});
 }
-
-async function refreshHistory() {
+async function loadHistory(){
   const r=await fetch('/api/history');const items=await r.json();
-  if(!items.length){E.dlContent.innerHTML='<div class="empty">暂无下载记录</div>';E.dlCard.classList.remove('hidden');return}
-  let h=`<table class="dl-table"><thead><tr>
-    <th>#</th><th>时间</th><th>文件名</th><th>大小</th><th>状态</th>
-  </tr></thead><tbody>`;
-  items.forEach(i=>{
-    const s=i.status==='完成'?'ok':i.status==='失败'?'fail':'skip';
-    const sz=i.size?((i.size>1e6?(i.size/1e6).toFixed(1)+' MB':(i.size>1e3?(i.size/1e3).toFixed(1)+' KB':i.size+' B'))):'—';
-    const urlShort=i.url?i.url.replace(/^https?:\/\//,'').substring(0,50):'';
-    h+=`<tr title="${i.url||''}">
-      <td style="color:var(--dim);font-size:11px">${i.id}</td>
-      <td style="font-size:11px;white-space:nowrap">${i.time||''}</td>
-      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.filename||''}\n${i.url||''}\n${i.path||''}">${i.filename||''}</td>
-      <td style="color:var(--dim);font-size:11px;white-space:nowrap">${sz}</td>
-      <td><span class="badge badge-${s==='ok'?'file':s==='fail'?'fail':'album'}" style="background:${s==='ok'?'#064e3b':s==='fail'?'#3b0a0a':'#1a3a5c'};color:${s==='ok'?'var(--green)':s==='fail'?'var(--red)':'var(--dim)'}">${i.status}</span></td>
+  if(!items.length){
+    E.histTable.innerHTML='';E.histEmpty.classList.remove('hidden');E.histCnt.textContent='';
+    E.histCard.classList.remove('hidden');return;
+  }
+  E.histEmpty.classList.add('hidden');E.histCnt.textContent=`${items.length} 条`;
+  E.histTable.innerHTML=`<thead><tr class="mono"><th>#</th><th>时间</th><th>文件名</th><th>大小</th><th>状态</th></tr></thead><tbody>${items.slice(0,50).map(i=>{
+    const sz=i.size?(i.size>1e6?(i.size/1e6).toFixed(1)+' MB':(i.size>1e3?(i.size/1e3).toFixed(1)+' KB':i.size+' B')):'—';
+    return `<tr title="${i.url||''}${i.path?'\n'+i.path:''}">
+      <td style="color:var(--dim);font-size:10px">${i.id}</td>
+      <td style="font-size:10px;white-space:nowrap">${(i.time||'').substring(5)}</td>
+      <td class="fn" title="${i.filename||''}">${i.filename||''}</td>
+      <td style="color:var(--dim);font-size:10px;white-space:nowrap">${sz}</td>
+      <td><span style="font-size:10px;color:${i.status==='完成'?'var(--green)':i.status==='失败'?'var(--red)':'var(--dim)'}">${i.status}</span></td>
     </tr>`;
-  });
-  h+='</tbody></table>';E.dlContent.innerHTML=h;
-  E.dlCard.classList.remove('hidden');
+  }).join('')}</tbody>`;
+  E.histCard.classList.remove('hidden');
 }
-async function refreshSessionLog() {
+async function loadSlog(){
   const r=await fetch('/api/logs');const d=await r.json();
-  if(d.log){E.sessionLogView.textContent=d.log;E.logCard.classList.remove('hidden')}
+  if(d.log){E.slogView.textContent=d.log;E.slogCard.classList.remove('hidden')}
 }
 
-// ── bindings ──
+// bindings
 E.btnStart.addEventListener('click',startDownload);
 E.btnStop.addEventListener('click',stopDownload);
-E.btnSaveSettings.addEventListener('click',saveSettings);
-E.btnRefreshSubdirs.addEventListener('click',()=>refreshSubdirs(E.dlSubdir.value));
-E.btnCreateSubdir.addEventListener('click',toggleNewSubdir);
-E.confirmSubdir=el('btnConfirmSubdir');
-E.confirmSubdir.addEventListener('click',confirmSubdir);
-E.urls.addEventListener('input',()=>{
-  const n=E.urls.value.split('\n').filter(l=>l.trim()).length;
-  E.urlHint.textContent=n?`${n} 个 URL (未保存)`:'';
-});
+E.btnSaveCfg.addEventListener('click',saveSettings);
+E.btnRefreshDirs.addEventListener('click',()=>loadSubdirs(E.cfSubdir.value));
+E.btnNewDir.addEventListener('click',toggleNewDir);
+E.btnConfirmDir.addEventListener('click',confirmDir);
 
-// ── init ──
-loadSettings();loadUrls();tick();
+// init
+loadSettings();loadUrls();tick();loadHistory();loadSlog();
 </script>
 </body>
 </html>

@@ -244,9 +244,12 @@ def run_download_thread(urls, settings):
         urls_txt = "\n".join(u.strip() for u in urls if u.strip()) + "\n"
         URLS_FILE.parent.mkdir(parents=True, exist_ok=True)
         URLS_FILE.write_text(urls_txt)
+        # BunkrDownloader reads URLs.txt from its working directory (/app)
+        Path("/app/URLs.txt").write_text(urls_txt)
 
         env = os.environ.copy()
         env["PYTHONUNBUFFERED"] = "1"
+        env["TERM"] = "dumb"
 
         http_proxy = settings.get("httpProxy", "").strip()
         https_proxy = settings.get("httpsProxy", "").strip()

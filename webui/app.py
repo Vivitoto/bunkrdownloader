@@ -91,11 +91,16 @@ def read_logs(tail=200):
 
 
 def list_downloads():
-    dl = DOWNLOADS_DIR
-    if not dl.exists():
+    """List items downloaded by BunkrDownloader.
+    BunkrDownloader places files inside <custom_path>/Downloads/<AlbumName>/."""
+    settings = load_settings()
+    base = Path(settings.get("downloadPath", "/data/downloads"))
+    subdir = settings.get("downloadSubdir", "").strip().strip("/")
+    dl_root = base / subdir / "Downloads" if subdir else base / "Downloads"
+    if not dl_root.exists():
         return []
     result = []
-    for item in sorted(dl.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True):
+    for item in sorted(dl_root.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True):
         if item.is_dir():
             files = []
             total_size = 0
@@ -342,11 +347,12 @@ def api_subdirs():
         if rel and "/" not in rel and ".." not in rel:
             (dl / rel).mkdir(parents=True, exist_ok=True)
         return jsonify({"ok": True})
-    # Recursive listing
+    # Recursive listing — keep root first, rest sorted
     dirs = [{"name": "(根目录)", "path": "/data/downloads"}]
     _walk_subdirs(dl, "", dirs)
-    dirs.sort(key=lambda d: d["name"])
-    # keep root first
+    if len(dirs) > 1:
+        tail = sorted(dirs[1:], key=lambda d: d["name"])
+        dirs[1:] = tail
     return jsonify(dirs)
 
 

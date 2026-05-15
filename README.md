@@ -15,11 +15,37 @@
 ## 快速开始
 
 ```bash
-cd Docker/BunkrDownloader
+mkdir bunkrdownloader && cd bunkrdownloader
+curl -O https://raw.githubusercontent.com/Vivitoto/bunkrdownloader/main/docker-compose.yml
 docker compose up -d
 ```
 
 浏览器打开 `http://<局域网IP>:8877`
+
+**compose.yml**
+
+```yaml
+services:
+  bunkrdownloader:
+    image: vitoto/bunkrdownloader:latest
+    container_name: bunkrdownloader
+    ports:
+      - "8877:8877"
+    volumes:
+      - ./downloads:/data/downloads
+      - ./logs:/data/logs
+      - ./config:/data/config
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
+```
+
+**手动拉取镜像**
+
+```bash
+docker pull vitoto/bunkrdownloader:1.0.0   # 固定版本
+docker pull vitoto/bunkrdownloader:latest   # 最新版
+```
 
 ## 命令
 
@@ -33,8 +59,8 @@ docker logs -f bunkrdownloader
 # 停止
 docker compose down
 
-# 重建（源码更新后）
-docker compose build --no-cache && docker compose up -d
+# 更新到最新镜像
+docker compose pull && docker compose up -d
 ```
 
 ## 目录结构
@@ -106,6 +132,8 @@ server {
 ## 技术栈
 
 - **容器**：python:3.12-slim (~140MB)
+- **镜像**：[vitoto/bunkrdownloader](https://hub.docker.com/r/vitoto/bunkrdownloader)
+- **源码**：[Vivitoto/bunkrdownloader](https://github.com/Vivitoto/bunkrdownloader)
 - **Web**：Flask + 原生 JS，无外部前端框架
 - **下载引擎**：BunkrDownloader (asyncio + requests)
 - **运行用户**：bun（非 root）

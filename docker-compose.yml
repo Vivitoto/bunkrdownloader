@@ -1,6 +1,6 @@
 services:
   bunkrdownloader:
-    build: .
+    image: vitoto/bunkrdownloader:latest
     container_name: bunkrdownloader
     ports:
       - "8877:8877"

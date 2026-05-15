@@ -1,0 +1,10 @@
+{
+  "concurrency": 3,
+  "maxRetries": 5,
+  "downloadPath": "/data/downloads",
+  "downloadSubdir": "test_album",
+  "ignoreList": "",
+  "includeList": "",
+  "httpProxy": "http://192.168.1.1:7890",
+  "httpsProxy": ""
+}

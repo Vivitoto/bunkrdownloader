@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BunkrDownloader</title>
+<style>
+:root {
+  --bg:#0a0a0f; --card:#111118; --border:#1e1e2e; --text:#d4d4d8;
+  --dim:#71717a; --accent:#818cf8; --green:#34d399; --red:#f87171;
+  --yellow:#fbbf24; --cyan:#22d3ee; --radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* header */
+header{background:var(--card);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+header h1{font-size:17px;font-weight:600;display:flex;align-items:center;gap:10px}
+header h1 span.dot{width:7px;height:7px;border-radius:50%;background:var(--dim);display:inline-block}
+header h1 span.dot.running{background:var(--green);box-shadow:0 0 8px var(--green)}
+.status-text{font-size:12px;color:var(--dim)}
+
+/* layout */
+.layout{display:grid;grid-template-columns:380px 1fr;gap:16px;padding:20px;max-width:1300px;margin:0 auto;min-height:calc(100vh - 60px)}
+
+/* cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-header h2{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--dim)}
+.card-body{padding:16px 18px}
+
+/* sidebar */
+.sidebar{display:flex;flex-direction:column;gap:12px}
+
+/* form */
+.form-row{display:flex;gap:10px}
+.form-row>*{flex:1}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:11px;color:var(--dim);margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
+.field input,.field textarea,.field select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;color:var(--text);font-size:12.5px;font-family:inherit;resize:vertical;transition:border-color .2s}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--accent)}
+.field textarea{min-height:100px;font-family:'JetBrains Mono','SF Mono',monospace;font-size:11px;line-height:1.5}
+.field .hint{font-size:10px;color:var(--dim);margin-top:3px}
+
+/* buttons */
+.btn{padding:7px 18px;border-radius:6px;border:none;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{filter:brightness(1.2)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-green{background:var(--green);color:#000}
+.btn-red{background:var(--red);color:#fff}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-sm{padding:4px 10px;font-size:11px}
+.btn-block{width:100%;justify-content:center}
+.btn-group{display:flex;gap:8px;margin-top:10px}
+
+/* right panel */
+.main-panel{display:flex;flex-direction:column;gap:12px;min-height:0}
+
+/* progress area */
+.progress-card .card-body{padding:0}
+.file-list{max-height:360px;overflow-y:auto}
+.file-row{display:flex;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid var(--border);font-size:12.5px;transition:background .2s}
+.file-row:last-child{border-bottom:none}
+.file-row:hover{background:rgba(255,255,255,.02)}
+.file-icon{width:20px;text-align:center;flex-shrink:0;font-size:14px}
+.file-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.file-size{color:var(--dim);font-size:11px;flex-shrink:0;width:70px;text-align:right}
+.file-pct{color:var(--dim);font-size:11px;flex-shrink:0;width:48px;text-align:right}
+.file-bar{flex-shrink:0;width:80px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.file-bar-fill{height:100%;border-radius:2px;transition:width .4s,background .4s}
+.file-bar-fill.downloading{background:var(--accent)}
+.file-bar-fill.done{background:var(--green)}
+.file-bar-fill.fail{background:var(--red)}
+.file-row.done .file-name{color:var(--green)}
+.file-row.fail .file-name{color:var(--red)}
+.file-row.skip .file-name{color:var(--dim);text-decoration:line-through}
+
+/* summary bar */
+.summary-bar{display:flex;gap:16px;padding:10px 18px;border-top:1px solid var(--border);font-size:12px}
+.summary-bar .stat{display:flex;align-items:center;gap:5px}
+.summary-bar .stat-val{font-weight:700}
+.summary-bar .stat-val.ok{color:var(--green)}
+.summary-bar .stat-val.fail{color:var(--red)}
+.summary-bar .stat-val.skip{color:var(--dim)}
+
+/* log area */
+.log-card .card-body{padding:0}
+.log-list{max-height:280px;overflow-y:auto;font-family:'JetBrains Mono','SF Mono',monospace;font-size:11.5px}
+.log-row{display:flex;gap:10px;padding:5px 18px;border-bottom:1px solid rgba(255,255,255,.03);line-height:1.5}
+.log-row:hover{background:rgba(255,255,255,.015)}
+.log-ts{color:var(--dim);flex-shrink:0;width:52px}
+.log-event{flex-shrink:0;font-weight:600;min-width:70px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.log-detail{flex:1;color:var(--dim);min-width:0;word-break:break-all}
+.log-event.start,.log-event.done,.log-event.completed{color:var(--green)}
+.log-event.fail,.log-event.error{color:var(--red)}
+.log-event.skip{color:var(--yellow)}
+.log-event.info{color:var(--cyan)}
+
+/* downloads tab */
+.dl-table{width:100%;border-collapse:collapse;font-size:12px}
+.dl-table th{text-align:left;padding:8px 12px;font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
+.dl-table td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04)}
+.dl-table tr:hover{background:rgba(255,255,255,.02)}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600}
+.badge-album{background:#1e1b4b;color:var(--accent)}
+.badge-file{background:#064e3b;color:var(--green)}
+
+/* empty */
+.empty{text-align:center;color:var(--dim);padding:40px 0;font-size:13px}
+.empty-icon{font-size:32px;margin-bottom:8px;opacity:.4}
+
+/* responsive */
+@media(max-width:860px){.layout{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1><span>📦 BunkrDownloader</span><span class="dot" id="hdDot"></span></h1>
+  <div class="status-text" id="hdStatus">就绪</div>
+</header>
+
+<div class="layout">
+  <!-- sidebar -->
+  <div class="sidebar">
+    <!-- URLs -->
+    <div class="card">
+      <div class="card-header"><h2>📋 URL 列表</h2></div>
+      <div class="card-body">
+        <div class="field">
+          <textarea id="urlsInput" placeholder="https://bunkr.si/a/...&#10;https://bunkr.fi/f/...&#10;每行一个 URL"></textarea>
+          <div class="hint" id="urlHint"></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary btn-block" id="btnStart">▶ 开始下载</button>
+          <button class="btn btn-red btn-block hidden" id="btnStop">⏹ 停止</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="card">
+      <div class="card-header"><h2>⚙ 设置</h2></div>
+      <div class="card-body">
+        <div class="form-row">
+          <div class="field"><label>并发数</label><input type="number" id="setConcurrency" min="1" max="10" value="3"></div>
+          <div class="field"><label>重试次数</label><input type="number" id="setMaxRetries" min="0" max="20" value="5"></div>
+        </div>
+        <div class="field">
+          <label>下载子目录</label>
+          <div style="display:flex;gap:6px">
+            <select id="setDownloadSubdir"><option value="">(根目录)</option></select>
+            <button class="btn btn-ghost btn-sm" id="btnRefreshSubdirs" title="刷新列表">↻</button>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:4px">
+            <input type="text" id="setNewSubdir" placeholder="新建目录…" style="flex:1;font-size:11px">
+            <button class="btn btn-ghost btn-sm" id="btnCreateSubdir">+</button>
+          </div>
+        </div>
+        <div class="field"><label>忽略列表</label><input type="text" id="setIgnoreList" placeholder=".zip .rar .7z"></div>
+        <div class="field"><label>包含列表</label><input type="text" id="setIncludeList" placeholder="仅下载含关键词的文件"></div>
+        <div class="form-row">
+          <div class="field"><label>HTTP 代理</label><input type="text" id="setHttpProxy" placeholder="http://host:port"></div>
+          <div class="field"><label>HTTPS 代理</label><input type="text" id="setHttpsProxy" placeholder="http://host:port"></div>
+        </div>
+        <button class="btn btn-ghost btn-block" id="btnSaveSettings" style="margin-top:6px">保存设置</button>
+      </div>
+    </div>
+
+    <!-- Tabs for right panel content -->
+    <div class="card hidden" id="dlCard">
+      <div class="card-header"><h2>📁 已下载</h2></div>
+      <div class="card-body" id="dlContent"><div class="empty">加载中…</div></div>
+    </div>
+    <div class="card hidden" id="logCard">
+      <div class="card-header"><h2>📄 Session Log</h2></div>
+      <div class="card-body" style="padding:0">
+        <div class="log-list" id="sessionLogView" style="max-height:300px;padding:12px 18px;font-size:11px;color:var(--dim)"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- main panel -->
+  <div class="main-panel">
+    <!-- Progress -->
+    <div class="card progress-card">
+      <div class="card-header">
+        <h2 id="progressTitle">📡 实时进度</h2>
+        <span style="font-size:11px;color:var(--dim)" id="progressSub"></span>
+      </div>
+      <div class="file-list" id="fileList">
+        <div class="empty"><div class="empty-icon">📭</div>暂无任务</div>
+      </div>
+      <div class="summary-bar hidden" id="summaryBar"></div>
+    </div>
+
+    <!-- Event log -->
+    <div class="card log-card">
+      <div class="card-header"><h2>📟 事件日志</h2></div>
+      <div class="log-list" id="logList">
+        <div class="empty"><div class="empty-icon">📝</div>等待开始…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── elements ──
+const el = id => document.getElementById(id);
+const E={
+  urls:el('urlsInput'),urlHint:el('urlHint'),btnStart:el('btnStart'),btnStop:el('btnStop'),
+  concurrency:el('setConcurrency'),maxRetries:el('setMaxRetries'),
+  dlSubdir:el('setDownloadSubdir'),newSubdir:el('setNewSubdir'),
+  ignore:el('setIgnoreList'),include:el('setIncludeList'),
+  httpProxy:el('setHttpProxy'),httpsProxy:el('setHttpsProxy'),
+  fileList:el('fileList'),logList:el('logList'),progressTitle:el('progressTitle'),
+  progressSub:el('progressSub'),summaryBar:el('summaryBar'),
+  hdDot:el('hdDot'),hdStatus:el('hdStatus'),
+  dlCard:el('dlCard'),dlContent:el('dlContent'),
+  logCard:el('logCard'),sessionLogView:el('sessionLogView'),
+};
+
+// ── polling ──
+let lastJobLen = 0;
+
+async function tick() {
+  try {
+    const r=await fetch('/api/status');const d=await r.json();
+    renderJob(d.job, d.running);
+    E.hdDot.className='dot'+(d.running?' running':'');
+    E.hdStatus.textContent=d.running?'运行中':'就绪';
+    if (d.running) {
+      E.btnStart.classList.add('hidden');
+      E.btnStop.classList.remove('hidden');
+    } else {
+      E.btnStart.classList.remove('hidden');
+      E.btnStop.classList.add('hidden');
+    }
+  } catch(e) {}
+  // periodically refresh downloads & session log
+  if (tick.count==null) tick.count=0;
+  tick.count++;
+  if (tick.count%15===0) { refreshDownloads(); refreshSessionLog(); }
+}
+setInterval(tick, 1500);
+
+function renderJob(job) {
+  if (!job) return;
+
+  // progress title
+  if (job.phase==='running') {
+    E.progressTitle.textContent = '📡 实时进度';
+    E.progressSub.textContent = '';
+  } else if (job.phase==='idle' && job.summary) {
+    E.progressTitle.textContent = '✅ 任务完成';
+    E.progressSub.textContent = '';
+  } else {
+    E.progressTitle.textContent = '📡 实时进度';
+    E.progressSub.textContent = '';
+  }
+
+  // file list
+  if (job.files && job.files.length) {
+    E.fileList.innerHTML = job.files.map(f => {
+      const icon = f.status==='done'?'✅':f.status==='fail'?'❌':f.status==='skip'?'⏭️':'⬇️';
+      const cls = f.status;
+      const pct = f.pct||0;
+      const barCls = f.status==='done'?'done':f.status==='fail'?'fail':'downloading';
+      const dls = f.downloaded||'';
+      const sz = f.size||'?';
+      return `<div class="file-row ${cls}">
+        <span class="file-icon">${icon}</span>
+        <span class="file-name" title="${f.name}">${f.name}</span>
+        <span class="file-size">${dls ? dls+' / '+sz : sz}</span>
+        <span class="file-pct">${pct>0?pct+'%':''}</span>
+        <span class="file-bar"><span class="file-bar-fill ${barCls}" style="width:${pct}%"></span></span>
+      </div>`;
+    }).join('');
+  } else if (job.phase==='idle' && !job.summary) {
+    E.fileList.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>暂无任务</div>';
+  }
+
+  // summary
+  if (job.summary) {
+    const s=job.summary;
+    E.summaryBar.classList.remove('hidden');
+    E.summaryBar.innerHTML = `
+      <div class="stat">✅ 完成 <span class="stat-val ok">${s.completed||0}</span></div>
+      <div class="stat">❌ 失败 <span class="stat-val fail">${s.failed||0}</span></div>
+      <div class="stat">⏭️ 跳过 <span class="stat-val skip">${s.skipped||0}</span></div>
+      <div class="stat" style="margin-left:auto">⏱ ${s.time||''}</div>`;
+  } else if (job.files && job.files.length) {
+    const done=job.files.filter(f=>f.status==='done').length;
+    const fail=job.files.filter(f=>f.status==='fail').length;
+    const total=job.files.length;
+    E.summaryBar.classList.remove('hidden');
+    E.summaryBar.innerHTML = `<div class="stat">📊 ${done}/${total} 完成</div>${fail>0?`<div class="stat">❌ <span class="stat-val fail">${fail}</span> 失败</div>`:''}`;
+  } else {
+    E.summaryBar.classList.add('hidden');
+  }
+
+  // log list
+  if (job.logs && job.logs.length) {
+    E.logList.innerHTML = job.logs.slice(-80).map(l => {
+      const cls = l.event.toLowerCase().includes('error')||l.event.toLowerCase().includes('fail')?'error':
+                  l.event.toLowerCase().includes('skip')?'skip':
+                  l.event.toLowerCase().includes('start')||l.event.toLowerCase().includes('done')||l.event.toLowerCase().includes('completed')?'done':
+                  '';
+      return `<div class="log-row">
+        <span class="log-ts">${l.ts||''}</span>
+        <span class="log-event ${cls}">${l.event||''}</span>
+        <span class="log-detail">${l.detail||''}</span>
+      </div>`;
+    }).join('');
+    E.logList.scrollTop = E.logList.scrollHeight;
+  } else if (job.phase==='idle' && !job.summary) {
+    E.logList.innerHTML = '<div class="empty"><div class="empty-icon">📝</div>等待开始…</div>';
+  }
+}
+
+// ── settings ──
+async function loadSettings() {
+  const r=await fetch('/api/settings');const s=await r.json();
+  E.concurrency.value=s.concurrency||3;E.maxRetries.value=s.maxRetries||5;
+  E.ignore.value=s.ignoreList||'';E.include.value=s.includeList||'';
+  E.httpProxy.value=s.httpProxy||'';E.httpsProxy.value=s.httpsProxy||'';
+  await refreshSubdirs(s.downloadSubdir||'');
+}
+async function saveSettings() {
+  await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      concurrency:parseInt(E.concurrency.value),maxRetries:parseInt(E.maxRetries.value),
+      downloadPath:'/data/downloads',downloadSubdir:E.dlSubdir.value,
+      ignoreList:E.ignore.value,includeList:E.include.value,
+      httpProxy:E.httpProxy.value.trim(),httpsProxy:E.httpsProxy.value.trim()
+    })});
+  alert('设置已保存 ✓');
+}
+async function refreshSubdirs(cur) {
+  const r=await fetch('/api/subdirs');const dirs=await r.json();
+  E.dlSubdir.innerHTML=dirs.map(d=>`<option value="${d.name==='(根目录)'?'':d.name}" ${d.name===cur||(!cur&&d.name==='(根目录)')?'selected':''}>${d.name}</option>`).join('');
+}
+async function createSubdir() {
+  const n=E.newSubdir.value.trim();if(!n)return;
+  await fetch('/api/subdirs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n})});
+  E.newSubdir.value='';await refreshSubdirs(n);E.dlSubdir.value=n;
+}
+
+// ── URLs ──
+async function loadUrls() {
+  const r=await fetch('/api/urls');const d=await r.json();
+  E.urls.value=d.urls.join('\n');
+  E.urlHint.textContent=d.urls.length?`已保存 ${d.urls.length} 个 URL`:'';
+}
+async function saveUrls() {
+  const lines=E.urls.value.split('\n').map(l=>l.trim()).filter(l=>l);
+  await fetch('/api/urls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({urls:lines})});
+  E.urlHint.textContent=`已保存 ${lines.length} 个 URL`;
+}
+
+// ── start / stop ──
+async function startDownload() {
+  const lines=E.urls.value.split('\n').map(l=>l.trim()).filter(l=>l);
+  if(!lines.length) return alert('请至少输入一个 URL');
+  if(!confirm(`开始下载 ${lines.length} 个 URL？`))return;
+  await saveUrls();
+  const r=await fetch('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({urls:lines})});
+  const d=await r.json();if(!d.ok) alert(d.error);
+}
+async function stopDownload() {
+  if(!confirm('确认停止？'))return;
+  await fetch('/api/stop',{method:'POST'});
+}
+
+async function refreshDownloads() {
+  const r=await fetch('/api/downloads');const items=await r.json();
+  if(!items.length){E.dlContent.innerHTML='<div class="empty">暂无下载文件</div>';return}
+  let h='<table class="dl-table"><thead><tr><th>名称</th><th>大小</th><th>时间</th></tr></thead><tbody>';
+  items.forEach(i=>{
+    const badge=i.type==='album'?'<span class="badge badge-album">专辑</span>':'<span class="badge badge-file">文件</span>';
+    const sz=i.type==='album'?(i.totalSize>1e9?(i.totalSize/1e9).toFixed(2)+' GB':(i.totalSize/1e6).toFixed(1)+' MB'):(i.size>1e6?(i.size/1e6).toFixed(1)+' MB':(i.size/1e3).toFixed(1)+' KB');
+    h+=`<tr><td>${badge} ${i.name}</td><td style="color:var(--dim)">${sz}</td><td style="color:var(--dim);font-size:11px">${i.mtime?i.mtime.substring(0,16):''}</td></tr>`;
+  });
+  h+='</tbody></table>';E.dlContent.innerHTML=h;
+  E.dlCard.classList.remove('hidden');
+}
+async function refreshSessionLog() {
+  const r=await fetch('/api/logs');const d=await r.json();
+  if(d.log){E.sessionLogView.textContent=d.log;E.logCard.classList.remove('hidden')}
+}
+
+// ── bindings ──
+E.btnStart.addEventListener('click',startDownload);
+E.btnStop.addEventListener('click',stopDownload);
+E.btnSaveSettings.addEventListener('click',saveSettings);
+E.btnRefreshSubdirs.addEventListener('click',()=>refreshSubdirs(E.dlSubdir.value));
+E.btnCreateSubdir.addEventListener('click',createSubdir);
+E.urls.addEventListener('input',()=>{
+  const n=E.urls.value.split('\n').filter(l=>l.trim()).length;
+  E.urlHint.textContent=n?`${n} 个 URL (未保存)`:'';
+});
+
+// ── init ──
+loadSettings();loadUrls();tick();
+</script>
+</body>
+</html>

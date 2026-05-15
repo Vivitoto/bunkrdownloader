@@ -1,0 +1,12 @@
+# BunkrDownloader Docker
+# WebUI + containerized Bunkr media downloader
+
+# Build
+## docker compose build
+## docker compose up -d
+## open http://<host-ip>:8877
+
+# Volumes
+## ./downloads - downloaded media files
+## ./logs - session logs
+## ./config - settings + URL list (persistent across restarts)

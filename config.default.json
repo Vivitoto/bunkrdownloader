@@ -1,0 +1,10 @@
+{
+  "concurrency": 3,
+  "maxRetries": 5,
+  "downloadPath": "/data/downloads",
+  "downloadSubdir": "",
+  "ignoreList": "",
+  "includeList": "",
+  "httpProxy": "",
+  "httpsProxy": ""
+}

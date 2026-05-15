@@ -1,0 +1,13 @@
+services:
+  bunkrdownloader:
+    build: .
+    container_name: bunkrdownloader
+    ports:
+      - "8877:8877"
+    volumes:
+      - ./downloads:/data/downloads
+      - ./logs:/data/logs
+      - ./config:/data/config
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai

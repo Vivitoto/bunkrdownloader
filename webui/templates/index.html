@@ -310,7 +310,7 @@ function renderJob(job) {
       return `<div class="log-row">
         <span class="log-ts">${l.ts||''}</span>
         <span class="log-event ${cls}">${l.event||''}</span>
-        <span class="log-detail">${l.detail||''}</span>
+        <span class="log-detail">${l.details||''}</span>
       </div>`;
     }).join('');
     E.logList.scrollTop = E.logList.scrollHeight;

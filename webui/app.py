@@ -78,11 +78,8 @@ def load_settings():
 
 
 def save_settings(s):
-    try:
-        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-        SETTINGS_FILE.write_text(json.dumps(s, indent=2))
-    except (PermissionError, OSError):
-        pass  # volume mount permission mismatch; settings still apply in-memory
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    SETTINGS_FILE.write_text(json.dumps(s, indent=2))
 
 
 def read_logs(tail=200):
